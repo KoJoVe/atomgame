@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from "react";
+import React, { FunctionComponent } from "react";
 import { Box, Text, theme } from "@chakra-ui/react";
 
 import { useWindowDimensions } from "../hooks/window";
@@ -6,44 +6,42 @@ import { useWindowDimensions } from "../hooks/window";
 import { generateParticleColor } from "../generators/particle";
 
 import { polarToCartesian } from "../helpers/coordinates";
+import { iconComponents } from "../helpers/icons";
+import { ColorWeight } from "../helpers/color";
+import { ParticleColor } from "../helpers/particle";
+import { Icons } from "../helpers/icons";
 
-import { ColorWeight } from "../types/color";
-import { ParticleColor } from "../types/particle";
 import { Cell } from "../types/cell";
-
-export interface BoardUI {
-  cellHovered?: {
-    sector: number;
-    level: number;
-  }
-}
 
 export interface BoardProps {
   cells: Cell[][];
-  activeCell?: Cell;
+  hoveredCell?: { sector: number; level: number; }
   onClickCell: (cell: Cell) => void;
+  onEnterCell: (cell: Cell) => void;
+  onLeaveCell: (cell: Cell) => void;
 }
 
 export const Board: FunctionComponent<BoardProps> = (props) => {
-  const [ui, setUi] = useState<BoardUI>({});
   const { width } = useWindowDimensions();
   
-  const radius = width/5;
+  const radius = width/6;
   const padding = 25;
 
   const getBoardStyle = () => {
-    return { 
-      margin: `auto`,
-      marginTop: `${50}`
+    return {
+      left: `${padding}px`,
+      top: `${padding}px`,
     }
   }
   
   const getCellFillColor = (sector: number, level: number, weight?: ColorWeight) => {
-    const cWEmpty = ui.cellHovered?.level === level && ui.cellHovered.sector === sector ? (level%2 !== 0 ? 100 : 200) : (level%2 !== 0 ? 200 : 300);
-    const cwColor = Boolean(weight) ? weight! : ui.cellHovered?.level === level && ui.cellHovered.sector === sector ? 200 : 400;
+    const cWEmpty = props.hoveredCell?.level === level && props.hoveredCell?.sector === sector ? (level%2 !== 0 ? 100 : 200) : (level%2 !== 0 ? 200 : 300);
+    const cwColor = Boolean(weight) ? weight! : props.hoveredCell?.level === level && props.hoveredCell?.sector === sector ? 200 : 400;
+
     if (props.cells[sector][level] && props.cells[sector][level].particle && generateParticleColor(props.cells[sector][level].particle!)) {
       return `${theme.colors[generateParticleColor(props.cells[sector][level].particle!) as ParticleColor][cwColor]}`
     }
+
     return `${theme.colors.gray[cWEmpty as ColorWeight]}`;
   }
 
@@ -53,7 +51,7 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
     }
 
     const angle = 360/props.cells.length;
-    const r = radius - padding;
+    const r = radius;
     let cells: any[][] = [];
 
     for (let i = 0; i < props.cells.length; i++) {
@@ -94,68 +92,62 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
     }   
     return cells;
   }
-
-  const isCellActive = (cell: Cell) => {
-    return props.activeCell &&
-      props.activeCell.level === cell.level &&
-      props.activeCell.sector === cell.sector;
-  }
   
   return (
     <Box>
       <Text borderBottom={`1px solid ${theme.colors.gray[200]}`} maxW={250} mt={25} ml={25} fontSize={`sm`}>Formation Framework</Text>
-      <Box position={`relative`}>
-        <svg style={getBoardStyle()} 
-          viewBox={`0 0 ${radius * 2} ${radius * 2}`} 
+      <Box position={`relative`} style={getBoardStyle()} >
+        <svg viewBox={`0 0 ${radius * 2} ${radius * 2}`} 
           width={radius * 2} 
           height={radius * 2} >
             { 
-              getBoardCells().map(column => column.map(cell => <>
-                <path 
-                  d={cell.d}
-                  onMouseEnter={() => setUi({ ...ui, cellHovered: isCellActive(cell) ? undefined : { level: cell.level, sector: cell.sector } })} 
-                  onMouseLeave={() => setUi({ ...ui, cellHovered: undefined })}
-                  onClick={() => props.onClickCell(cell)}
-                  fill={getCellFillColor(cell.sector, cell.level)} 
-                  stroke={`white`}
-                  strokeWidth={1} 
-                  fillRule="evenodd"
-                  style={({ cursor: "pointer" })} >
-                    {
-                      (isCellActive(cell) || cell.glow) &&
-                        <animate
-                          attributeName="fill" 
-                          values={`
-                            ${cell.glow ? `
-                              ${getCellFillColor(cell.sector, cell.level, 300)};
-                              ${getCellFillColor(cell.sector, cell.level, 200)};
-                              ${getCellFillColor(cell.sector, cell.level, 300)};
-                              ${getCellFillColor(cell.sector, cell.level, 300)};
-                              ${getCellFillColor(cell.sector, cell.level, 300)};
-                              ${getCellFillColor(cell.sector, cell.level, 300)};
-                              ${getCellFillColor(cell.sector, cell.level, 300)};
-                              ${getCellFillColor(cell.sector, cell.level, 300)};
-                              ` : `
-                              ${getCellFillColor(cell.sector, cell.level, 400)};
-                              ${getCellFillColor(cell.sector, cell.level, 200)};
-                              ${getCellFillColor(cell.sector, cell.level, 400)};
-                              `}
-                          `} 
-                          dur={`${cell.glow || 5000}ms`} 
-                          repeatCount="indefinite" />
-                    }            
-                </path>
-              </>))
+              getBoardCells().map((column, i) => column.map((cell, j) => <path
+                key={`cell-${i}-${j}`} 
+                d={cell.d}
+                onMouseEnter={() => props.onEnterCell(cell) } 
+                onMouseLeave={() => props.onLeaveCell(cell) }
+                onClick={() => props.onClickCell(cell)}
+                fill={getCellFillColor(cell.sector, cell.level)} 
+                stroke={`white`}
+                strokeWidth={1} 
+                fillRule="evenodd"
+                style={({ cursor: "pointer" })} >
+                  {
+                    cell.glow &&
+                      <animate
+                        attributeName="fill" 
+                        values={`
+                          ${cell.glow ? `
+                            ${getCellFillColor(cell.sector, cell.level, 300)};
+                            ${getCellFillColor(cell.sector, cell.level, 200)};
+                            ${getCellFillColor(cell.sector, cell.level, 300)};
+                            ${getCellFillColor(cell.sector, cell.level, 300)};
+                            ${getCellFillColor(cell.sector, cell.level, 300)};
+                            ${getCellFillColor(cell.sector, cell.level, 300)};
+                            ${getCellFillColor(cell.sector, cell.level, 300)};
+                            ${getCellFillColor(cell.sector, cell.level, 300)};
+                            ` : `
+                            ${getCellFillColor(cell.sector, cell.level, 400)};
+                            ${getCellFillColor(cell.sector, cell.level, 200)};
+                            ${getCellFillColor(cell.sector, cell.level, 400)};
+                            `}
+                        `} 
+                        dur={`${cell.glow}ms`} 
+                        repeatCount="indefinite" />
+                  }            
+              </path>))
             }
         </svg>
         {
-          getBoardCells().map(column => column.map(cell => {
-            return cell.icon && <cell.icon 
+          getBoardCells().map((column, i) => column.map((cell, j) => {
+            const icon = { component: cell.icon && iconComponents[cell.icon as Icons] };
+            return cell.icon && <icon.component
+              key={`overlay-${i}-${j}`} 
               pos={`absolute`}
               cursor={`pointer`}
               onClick={() => props.onClickCell(cell)}
-              onMouseEnter={() => setUi({ ...ui, cellHovered: isCellActive(cell) ? undefined : { level: cell.level, sector: cell.sector } })} 
-              onMouseLeave={() => setUi({ ...ui, cellHovered: undefined })}
+              onMouseEnter={() => props.onEnterCell(cell) } 
+              onMouseLeave={() => props.onLeaveCell(cell) }
               left={`${polarToCartesian(radius, radius, cell.radius, cell.rotation).x}px`} 
               top={`${polarToCartesian(radius, radius, cell.radius, cell.rotation).y}px`}
               transform={`translate(-50%, -50%) rotate(${cell.rotation}deg)`}

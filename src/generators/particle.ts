@@ -1,4 +1,5 @@
-import { Particle, ParticleColor } from "../types/particle";
+import { ParticleColor } from "../helpers/particle";
+import { Particle } from "../types/particle";
 
 export const generateParticleInteractionPrioritySort = (a: Particle, b: Particle) => {
   if (a.swiftness > b.swiftness) {

@@ -2,31 +2,10 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { generateBoard } from '../generators/board';
 
-import { Board } from "../types/board";
-import { Particle } from '../types/particle';
+import { Board, InsertParticleAction, MoveParticleAction } from "../types/board";
 import { Cell } from '../types/cell';
 
 import { COLUMNS, LEVELS } from '../constants';
-
-export interface InsertParticleAction {
-  level: number;
-  sector: number;
-  particle: Particle;
-}
-
-export interface MoveParticleAction {
-  level: number;
-  sector: number;
-  direction: "up" | "down" | "left" | "right";
-}
-
-export interface SetupCellsAction {
-  level: number;
-  sector: number;
-  action?: Function;
-  glow?: number;
-  icon?: any;
-}
 
 export const boardSlice = createSlice({
   name: "board",
@@ -36,8 +15,15 @@ export const boardSlice = createSlice({
   reducers: {
     insertParticle: (board, action: PayloadAction<InsertParticleAction>) => {
       const { payload } = action;
+
+      let id = 0;
+      let ids = board.cells.flatMap(col => col.map(cell => cell)).filter(cell => !!cell.particle).map(cell => cell.particle!.id);
+      while (ids.find(i => i === id) !== undefined) {
+        id++;
+      }
+
       if (!board.cells[payload.sector][payload.level].particle) {
-        board.cells[payload.sector][payload.level].particle = payload.particle;
+        board.cells[payload.sector][payload.level].particle = { ...payload.particle, id: id };
       }
     },
     moveParticle: (board, action: PayloadAction<MoveParticleAction>) => {
@@ -63,19 +49,50 @@ export const boardSlice = createSlice({
       }
             
       board.cells[payload.sector][payload.level].particle = undefined;
-      board.cells[newLevel][newSector].particle = particle;
+      board.cells[newSector][newLevel].particle = particle;
     },
-    setupCells: (board, action: PayloadAction<SetupCellsAction[]>) => {
-      const { payload } = action;
-      for (let i = 0; i < payload.length; i++) {
-        const cell = payload[i];
-        board.cells[cell.sector][cell.level] = {
-          ...board.cells[cell.sector][cell.level],
-          action: cell.action,
-          glow: cell.glow,
-          icon: cell.icon
+    reloadCells: (board) => {
+      board.cells = board.cells.map(col => col.map(cell => {
+        return {
+          ...cell,
+          phase: undefined,
+          glow: undefined,
+          icon: undefined,
         }
+      }))
+    },
+    setupCells: (board, action: PayloadAction<Cell[]>) => {
+      const { payload } = action;
+      board.cells = board.cells.map(col => col.map(cell => {
+        const cellSetup = payload.find(c => c.level === cell.level && c.sector === cell.sector);
+        if (cellSetup) {
+          return {
+            ...cell,
+            glow: cellSetup.glow,
+            icon: cellSetup.icon,
+            phase: {
+              action: cellSetup.phase?.action,
+              payload: cellSetup.phase?.payload,
+            }
+          }
+        }
+        return {
+          ...cell,
+          phase: undefined,
+          glow: undefined,
+          icon: undefined,
+        };
+      }));
+    },
+    hoverCell: (board, action: PayloadAction<Cell>) => {
+      const { payload } = action;
+      board.hovered = {
+        sector: payload.sector,
+        level: payload.level,
       }
+    },
+    unhoverCell: (board) => {
+      board.hovered = undefined;
     },
     restartBoard: (board) => {
       board.cells = generateBoard(COLUMNS, LEVELS);
@@ -83,5 +100,13 @@ export const boardSlice = createSlice({
   }
 });
 
-export const { insertParticle, moveParticle, setupCells, restartBoard } = boardSlice.actions;
+export const { 
+  insertParticle, 
+  moveParticle, 
+  setupCells,
+  reloadCells,
+  hoverCell,
+  unhoverCell, 
+  restartBoard 
+} = boardSlice.actions;
 export const boardReducer = boardSlice.reducer;

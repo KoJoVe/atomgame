@@ -39,7 +39,7 @@ export const Deck: FunctionComponent<DeckProps> = (props) => {
     <Box>
       <Text borderBottom={`1px solid ${theme.colors.gray[200]}`} maxW={250} mt={25} ml={25} fontSize={`sm`}>Particle Catalog</Text>
       { props.cards.map((p, i) => 
-        <Button colorScheme={generateParticleColor(p)}
+        <Button key={`card-${i}`} colorScheme={generateParticleColor(p)}
           { ...getCardStyle() }
           variant={props.selected === i ? `solid` : `outline`}
           onClick={() => onClickCard(i)} >

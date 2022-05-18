@@ -8,9 +8,9 @@ import Controls from "./components/controls";
 
 import { Cell } from "./types/cell";
 
-import { startRound } from "./slices/round";
+import { runPhase, startRound } from "./slices/round";
 import { selectDeckCard } from "./slices/deck";
-import { insertParticle, restartBoard } from "./slices/board";
+import { hoverCell, insertParticle, restartBoard, unhoverCell } from "./slices/board";
 
 import { useDispatch, useSelector } from "./hooks/game";
 
@@ -19,32 +19,39 @@ export const App = () => {
 
   const cells = useSelector(game => game.board.cells);
   const cards = useSelector(game => game.deck.cards);
-  const activeCell = useSelector(game => game.round.current);
-  const selectedIndex = useSelector(game => game.deck.selected);
-  const selectedParticle = useSelector(game => selectedIndex !== undefined ? game.deck.cards[selectedIndex] : undefined);
-  const roundActive = useSelector(game => game.round.queue.length > 0); 
+  const roundActive = useSelector(game => game.round.current !== undefined);
+  const hoveredCell = useSelector(game => game.board.hovered);
+  const selectedParticleIndex = useSelector(game => game.deck.selected);
+  const selectedParticle = useSelector(game => selectedParticleIndex !== undefined && game.deck.cards[selectedParticleIndex]);
 
-  const onClickCell = (cell: Cell) => activeCell ? '' : selectedParticle && dispatch(insertParticle({ ...cell, particle: selectedParticle }));
+  const onClickCell = (cell: Cell) => roundActive ? dispatch(runPhase(cell)) : 
+    selectedParticle && dispatch(insertParticle({ ...cell, particle: selectedParticle }));
+  const onEnterCell = (cell: Cell) => dispatch(hoverCell(cell));
+  const onLeaveCell = () => dispatch(unhoverCell());
+
   const onSelectCard = (index: number) => dispatch(selectDeckCard(index));
+
   const onClickClear = () => dispatch(restartBoard());
   const onClickRun = () => dispatch(startRound());
 
   useEffect(() => {
-    onClickClear();
-  }, []);
+    dispatch(restartBoard());
+  }, [dispatch]);
 
   return (
     <Box>
       <Section>
         <Board
           cells={cells}
-          activeCell={activeCell}
-          onClickCell={onClickCell} />
+          hoveredCell={hoveredCell}
+          onClickCell={onClickCell}
+          onEnterCell={onEnterCell}
+          onLeaveCell={onLeaveCell} />
       </Section>
       <Section>
         <Deck
           cards={cards}
-          selected={selectedIndex}
+          selected={selectedParticleIndex}
           onSelectCard={onSelectCard} />
         <Controls
           disabled={roundActive}

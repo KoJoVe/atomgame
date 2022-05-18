@@ -1,10 +1,16 @@
+import { Icons } from "../helpers/icons";
+import { PhaseActions, PhasePayloads } from "../helpers/phase";
+
 import { Particle } from "./particle";
 
 export type Cell = {
   level: number;
   sector: number;
   particle?: Particle;
-  action?: Function;
   glow?: number;
-  icon?: any;
+  icon?: Icons;
+  phase?: {
+    action?: PhaseActions;
+    payload?: PhasePayloads;  
+  }
 }

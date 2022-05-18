@@ -8,17 +8,16 @@ export interface SectionProps {
 };
 
 export const Section: FunctionComponent<SectionProps> = (props) => {
-  const { height, width } = useWindowDimensions();
+  const { height } = useWindowDimensions();
 
   const getSectionStyle = () => {
     return { 
       position: `relative` as any,
       float: `left` as any,
-      width: width/2, 
+      width: '50%', 
       height: height, 
       border: `0px solid ${theme.colors.gray[500]}`,
-      borderRadius: "10px",
-      boxSing: `border-box`,
+      borderRadius: "10px"
     }
   }
   

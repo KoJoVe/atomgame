@@ -1,5 +1,4 @@
-export type ParticleColor = "red" | "blue" | "green";
-export type ParticleProperties = "vitality" | "power" | "swiftness";
+import { ParticleProperties } from "../helpers/particle";
 
 export type Particle = {
   [key in ParticleProperties]: number; 
