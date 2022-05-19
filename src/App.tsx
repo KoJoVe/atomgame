@@ -19,7 +19,8 @@ export const App = () => {
 
   const cells = useSelector(game => game.board.cells);
   const cards = useSelector(game => game.deck.cards);
-  const roundActive = useSelector(game => game.round.current !== undefined);
+  const roundActive = useSelector(game => game.round.queue.length > 0 || game.round.current !== undefined);
+  const currentParticle = useSelector(game => game.round.current);
   const hoveredCell = useSelector(game => game.board.hovered);
   const selectedParticleIndex = useSelector(game => game.deck.selected);
   const selectedParticle = useSelector(game => selectedParticleIndex !== undefined && game.deck.cards[selectedParticleIndex]);
@@ -43,6 +44,7 @@ export const App = () => {
       <Section>
         <Board
           cells={cells}
+          current={currentParticle}
           hoveredCell={hoveredCell}
           onClickCell={onClickCell}
           onEnterCell={onEnterCell}

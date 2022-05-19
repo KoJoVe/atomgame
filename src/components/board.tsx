@@ -15,6 +15,7 @@ import { Cell } from "../types/cell";
 
 export interface BoardProps {
   cells: Cell[][];
+  current?: number;
   hoveredCell?: { sector: number; level: number; }
   onClickCell: (cell: Cell) => void;
   onEnterCell: (cell: Cell) => void;
@@ -140,8 +141,15 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
         </svg>
         {
           getBoardCells().map((column, i) => column.map((cell, j) => {
-            const icon = { component: cell.icon && iconComponents[cell.icon as Icons] };
-            return cell.icon && <icon.component
+            let icon = { component: cell.icon && iconComponents[cell.icon as Icons] };
+
+            const isCurrent = props.current !== undefined && (cell as Cell).particle?.id === props.current;
+            if (isCurrent) {
+              icon = { component: iconComponents["ViewIcon"] };
+            }
+            
+            return (cell.icon || isCurrent) && <icon.component
+              color={ isCurrent ? `white` : `black` }
               key={`overlay-${i}-${j}`} 
               pos={`absolute`}
               cursor={`pointer`}
@@ -151,7 +159,7 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
               left={`${polarToCartesian(radius, radius, cell.radius, cell.rotation).x}px`} 
               top={`${polarToCartesian(radius, radius, cell.radius, cell.rotation).y}px`}
               transform={`translate(-50%, -50%) rotate(${cell.rotation}deg)`}
-              animation={`${cell.glow || 1000}ms infinite icon`}
+              animation={!isCurrent ? `${cell.glow || 1000}ms infinite icon` : ``}
             />}))
         }
       </Box>
