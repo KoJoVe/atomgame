@@ -10,8 +10,8 @@ export const deckSlice = createSlice({
     cards: generateDeck()
   } as Deck,
   reducers: {
-    selectDeckCard: (deck, action: PayloadAction<number>) => { deck.selected = action.payload },
-    resetDeck: (deck) => { deck.cards = generateDeck() }
+    selectDeckCard: (deck: Deck, action: PayloadAction<number>) => { deck.selected = action.payload },
+    resetDeck: (deck: Deck) => { deck.cards = generateDeck() }
   },
 })
 

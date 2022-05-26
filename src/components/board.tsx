@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from "react";
-import { Box, Text, theme } from "@chakra-ui/react";
+import { Box, Icon, Text, theme } from "@chakra-ui/react";
 
 import { useWindowDimensions } from "../hooks/window";
 
@@ -148,7 +148,8 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
               icon = { component: iconComponents["ViewIcon"] };
             }
             
-            return (cell.icon || isCurrent) && <icon.component
+            return (cell.icon || isCurrent) && <Icon
+              as={icon.component}
               color={ isCurrent ? `white` : `black` }
               key={`overlay-${i}-${j}`} 
               pos={`absolute`}

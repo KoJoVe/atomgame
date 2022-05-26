@@ -21,7 +21,7 @@ export const roundSlice = createSlice({
     queue: [],
   } as Round,
   reducers: {
-    loadQueue: (round, action: PayloadAction<Board>) => {
+    loadQueue: (round: Round, action: PayloadAction<Board>) => {
       round.current = undefined;
       round.phases = [];
       round.queue = action.payload.cells
@@ -30,15 +30,15 @@ export const roundSlice = createSlice({
         .sort((a, b) => generateParticleInteractionPrioritySort(a.particle!, b.particle!))
         .map(cell => cell.particle!.id);
     },
-    nextParticle: (round) => {
+    nextParticle: (round: Round) => {
       round.current = round.queue[0];
       round.queue = round.queue.slice(1);
       round.phases = generatePhasesStrings();
     },
-    nextPhase: (round) => {
+    nextPhase: (round: Round) => {
       round.phases = round.phases.slice(1);
     },
-    endRound: (round) => {
+    endRound: (round: Round) => {
       round.current = undefined;
       round.phases = [];
       round.queue = [];
@@ -77,14 +77,18 @@ export const preparePhase = () => async (dispatch: GameDispatch, getState: () =>
 export const runPhase = (cell: Cell) => async (dispatch: GameDispatch) => {
   dispatch(nextPhase());
 
-  if (!cell.phase?.action || !cell.phase?.payload) {
+  if (!cell.phaseActions || cell.phaseActions.length < 1) {
     return;
   }
 
   const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-  dispatch(phaseActions[cell.phase?.action!](cell.phase?.payload!));
-  dispatch(reloadCells());
-  await sleep(WAIT);
+
+  for (let i = 0; i < cell.phaseActions.length; i++) {
+    dispatch(phaseActions[cell.phaseActions[i].action](cell.phaseActions[i].payload));
+    dispatch(reloadCells());
+    await sleep(WAIT);      
+  }
+
   dispatch(preparePhase());
 }
 

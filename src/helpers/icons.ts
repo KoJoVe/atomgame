@@ -1,13 +1,21 @@
-import { ArrowDownIcon, ArrowUpIcon, ViewIcon } from "@chakra-ui/icons";
-import { ComponentWithAs, IconProps } from "@chakra-ui/react";
+import { IconType } from "react-icons";
+
+import {
+  BsArrowBarUp,
+  BsArrowBarDown, 
+  BsBullseye,
+  BsFillLightningChargeFill 
+} from "react-icons/bs";
 
 export type Icons = 
   "ArrowUpIcon" |
   "ArrowDownIcon" |
-  "ViewIcon"
+  "ViewIcon" |
+  "LightiningIcon"
 
-export const iconComponents: { [key in Icons]: ComponentWithAs<"svg", IconProps> } = {
-  ArrowUpIcon: ArrowUpIcon,
-  ArrowDownIcon: ArrowDownIcon,
-  ViewIcon: ViewIcon,
+export const iconComponents: { [key in Icons]: IconType } = {
+  ArrowUpIcon: BsArrowBarUp,
+  ArrowDownIcon: BsArrowBarDown,
+  ViewIcon: BsBullseye,
+  LightiningIcon: BsFillLightningChargeFill,
 }

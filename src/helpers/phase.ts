@@ -1,12 +1,32 @@
-import { moveParticle } from "../slices/board";
-import { MoveParticleAction } from "../types/board";
+import { 
+  insertParticle, 
+  moveParticle, 
+  updateParticle, 
+  swapParticles, 
+} from "../slices/board";
+
+import { 
+  InsertParticleAction,
+  MoveParticleAction,
+  UpdateParticleAction,
+  SwapParticlesAction
+} from "../types/board";
 
 export type PhaseActions = 
-  "moveParticle" 
+  "insertParticle" |
+  "moveParticle" |
+  "updateParticle" |
+  "swapParticles"
 
 export type PhasePayloads = 
-  MoveParticleAction
-
+  InsertParticleAction |
+  MoveParticleAction |
+  UpdateParticleAction |
+  SwapParticlesAction
+  
 export const phaseActions: { [key in PhaseActions]: Function } = {
-  moveParticle: moveParticle
+  insertParticle: insertParticle,
+  moveParticle: moveParticle,
+  updateParticle: updateParticle,
+  swapParticles: swapParticles,
 }

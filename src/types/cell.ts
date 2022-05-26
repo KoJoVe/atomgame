@@ -9,8 +9,9 @@ export type Cell = {
   particle?: Particle;
   glow?: number;
   icon?: Icons;
-  phase?: {
-    action?: PhaseActions;
-    payload?: PhasePayloads;  
-  }
+  phaseActions?: {
+    action: PhaseActions;
+    payload: PhasePayloads;
+    autorun?: boolean;
+  }[];
 }
