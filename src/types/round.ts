@@ -1,8 +1,8 @@
-import { Cell } from "./cell";
 import { ParticleColor } from "../helpers/particle";
+import { Cell } from "./cell";
 
 export type Round = {
-  queue: number[];
+  queue: Cell[];
   phases: ParticleColor[];
   current?: number;
 }

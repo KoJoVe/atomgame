@@ -27,13 +27,13 @@ export const roundSlice = createSlice({
       round.queue = action.payload.cells
         .flatMap(col => col.map(cell => cell))
         .filter(cell => !!cell.particle)
-        .sort((a, b) => generateParticleInteractionPrioritySort(a.particle!, b.particle!))
-        .map(cell => cell.particle!.id);
+        .sort((a, b) => generateParticleInteractionPrioritySort(a.particle!, b.particle!));
     },
     nextParticle: (round: Round) => {
-      round.current = round.queue[0];
+      const cell = round.queue[0];
+      round.current = cell && cell.particle?.id;
       round.queue = round.queue.slice(1);
-      round.phases = generatePhasesStrings();
+      round.phases = generatePhasesStrings(cell.particle);
     },
     nextPhase: (round: Round) => {
       round.phases = round.phases.slice(1);

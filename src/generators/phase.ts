@@ -2,6 +2,7 @@ import { Directions } from "../helpers/directions";
 import { ParticleColor, particleColorMap } from "../helpers/particle";
 import { GameState } from "../store";
 import { Cell } from "../types/cell";
+import { Particle } from "../types/particle";
 import { generateParticleColor } from "./particle";
 
 export const generateRedPhase = (game: GameState): Cell[] => {
@@ -10,7 +11,7 @@ export const generateRedPhase = (game: GameState): Cell[] => {
   }
 
   const current = game.board.cells.flatMap(col => col.map(cell => cell)).find(cell => cell.particle?.id === game.round.current);
-  if (current!.particle!.vitality < 1) {
+  if (!current || current!.particle!.vitality < 1) {
     return [];
   }
   
@@ -55,7 +56,7 @@ export const generateBluePhase = (game: GameState): Cell[] => {
   }
 
   const current = game.board.cells.flatMap(col => col.map(cell => cell)).find(cell => cell.particle?.id === game.round.current);
-  if (current!.particle!.power < 1) {
+  if (!current || current!.particle!.power < 1) {
     return [];
   }
   
@@ -69,132 +70,63 @@ export const generateBluePhase = (game: GameState): Cell[] => {
 
   let cells: Cell[] = [];
 
+  const generateCellActions = (cell: Cell, current: Cell, powerDif: number): Cell => {
+    const color = current.particle!.power >= cell.particle!.power ? 
+      generateParticleColor(cell.particle!) : generateParticleColor(current.particle!);
+
+    return {
+      sector: cell.sector,
+      level: cell.level,
+      icon: "LightiningIcon",
+      phaseActions: [
+        {
+          action: "updateParticle",
+          payload: {
+            sector: current.sector,
+            level: current.level,
+            property: particleColorMap[color],
+            amount: powerDif
+          }
+        },
+        {
+          action: "updateParticle",
+          payload: {
+            sector: cell.sector,
+            level: cell.level,
+            property: particleColorMap[color],
+            amount: -powerDif
+          }
+        }
+      ]
+    }
+  }
+
   if (aboveCell && aboveCell.particle) {
-    const powerDif = current!.particle!.power - aboveCell.particle!.power;
-    const color = current!.particle!.power >= aboveCell.particle!.power ? 
-      generateParticleColor(aboveCell.particle!) : generateParticleColor(current!.particle!);
-      
-    cells.push({
-      sector: current!.sector,
-      level: current!.level + 1,
-      icon: "LightiningIcon",
-      phaseActions: [
-        {
-          action: "updateParticle",
-          payload: {
-            sector: current!.sector,
-            level: current!.level,
-            property: particleColorMap[color],
-            amount: powerDif
-          }
-        },
-        {
-          action: "updateParticle",
-          payload: {
-            sector: current!.sector,
-            level: current!.level + 1,
-            property: particleColorMap[color],
-            amount: -powerDif
-          }
-        }
-      ]
-    });
+    const powerDif = current.particle!.power - aboveCell.particle!.power;
+    if (powerDif !== 0) {
+      cells.push(generateCellActions(aboveCell, current!, powerDif));
+    }
   }
 
-  if (belowCell && belowCell.particle) {
-    const powerDif = current!.particle!.power - belowCell.particle!.power;
-    const color = current!.particle!.power >= belowCell.particle!.power ? 
-      generateParticleColor(belowCell.particle!) : generateParticleColor(current!.particle!);
-      
-    cells.push({
-      sector: current!.sector,
-      level: current!.level - 1,
-      icon: "LightiningIcon",
-      phaseActions: [
-        {
-          action: "updateParticle",
-          payload: {
-            sector: current!.sector,
-            level: current!.level,
-            property: particleColorMap[color],
-            amount: powerDif
-          }
-        },
-        {
-          action: "updateParticle",
-          payload: {
-            sector: current!.sector,
-            level: current!.level - 1,
-            property: particleColorMap[color],
-            amount: -powerDif
-          }
-        }
-      ]
-    });
+  if (belowCell && belowCell.particle) {      
+    const powerDif = current.particle!.power - belowCell.particle!.power;
+    if (powerDif !== 0) {
+      cells.push(generateCellActions(belowCell, current!, powerDif));
+    }
   }
 
-  if (leftCell && leftCell.particle) {
-    const powerDif = current!.particle!.power - leftCell.particle!.power;
-    const color = current!.particle!.power >= leftCell.particle!.power ? 
-      generateParticleColor(leftCell.particle!) : generateParticleColor(current!.particle!);
-      
-    cells.push({
-      sector: current!.sector,
-      level: current!.level + 1,
-      icon: "LightiningIcon",
-      phaseActions: [
-        {
-          action: "updateParticle",
-          payload: {
-            sector: current!.sector,
-            level: current!.level,
-            property: particleColorMap[color],
-            amount: powerDif
-          }
-        },
-        {
-          action: "updateParticle",
-          payload: {
-            sector: current!.sector,
-            level: current!.level + 1,
-            property: particleColorMap[color],
-            amount: -powerDif
-          }
-        }
-      ]
-    });
+  if (leftCell && leftCell.particle) {      
+    const powerDif = current.particle!.power - leftCell.particle!.power;
+    if (powerDif !== 0) {
+      cells.push(generateCellActions(leftCell, current!, powerDif));
+    }
   }
 
-  if (rightCell && rightCell.particle) {
-    const powerDif = current!.particle!.power - rightCell.particle!.power;
-    const color = current!.particle!.power >= rightCell.particle!.power ? 
-      generateParticleColor(rightCell.particle!) : generateParticleColor(current!.particle!);
-      
-    cells.push({
-      sector: current!.sector,
-      level: current!.level + 1,
-      icon: "LightiningIcon",
-      phaseActions: [
-        {
-          action: "updateParticle",
-          payload: {
-            sector: current!.sector,
-            level: current!.level,
-            property: particleColorMap[color],
-            amount: powerDif
-          }
-        },
-        {
-          action: "updateParticle",
-          payload: {
-            sector: current!.sector,
-            level: current!.level + 1,
-            property: particleColorMap[color],
-            amount: -powerDif
-          }
-        }
-      ]
-    });
+  if (rightCell && rightCell.particle) {      
+    const powerDif = current.particle!.power - rightCell.particle!.power;
+    if (powerDif !== 0) {
+      cells.push(generateCellActions(rightCell, current!, powerDif));
+    }
   }
 
   return cells;
@@ -216,4 +148,22 @@ export const generatePhases = (): { [key in ParticleColor]: (game: GameState) =>
   }
 }
 
-export const generatePhasesStrings = (): ParticleColor[] => ["red"];
+export const generatePhasesStrings = (particle?: Particle): ParticleColor[] => {
+  let phases: ParticleColor[] = [];
+
+  if (!particle) {
+    return [];
+  }
+
+  if (particle?.swiftness > 0) {
+    phases.push("green");
+  }
+  if (particle?.power > 0) {
+    phases.push("blue");
+  }
+  if (particle?.vitality > 0) {
+    phases.push("red");
+  }
+  
+  return phases;
+};
