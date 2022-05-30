@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from "react";
-import { Box, Icon, Text, theme } from "@chakra-ui/react";
+import { Box, Icon, Text, theme, Tooltip } from "@chakra-ui/react";
 
 import { useWindowDimensions } from "../hooks/window";
 
@@ -102,41 +102,45 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
           width={radius * 2} 
           height={radius * 2} >
             { 
-              getBoardCells().map((column, i) => column.map((cell, j) => <path
-                key={`cell-${i}-${j}`} 
-                d={cell.d}
-                onMouseEnter={() => props.onEnterCell(cell) } 
-                onMouseLeave={() => props.onLeaveCell(cell) }
-                onClick={() => props.onClickCell(cell)}
-                fill={getCellFillColor(cell.sector, cell.level)} 
-                stroke={`white`}
-                strokeWidth={1} 
-                fillRule="evenodd"
-                style={({ cursor: "pointer" })} >
-                  {
-                    cell.glow &&
-                      <animate
-                        attributeName="fill" 
-                        values={`
-                          ${cell.glow ? `
-                            ${getCellFillColor(cell.sector, cell.level, 300)};
-                            ${getCellFillColor(cell.sector, cell.level, 200)};
-                            ${getCellFillColor(cell.sector, cell.level, 300)};
-                            ${getCellFillColor(cell.sector, cell.level, 300)};
-                            ${getCellFillColor(cell.sector, cell.level, 300)};
-                            ${getCellFillColor(cell.sector, cell.level, 300)};
-                            ${getCellFillColor(cell.sector, cell.level, 300)};
-                            ${getCellFillColor(cell.sector, cell.level, 300)};
-                            ` : `
-                            ${getCellFillColor(cell.sector, cell.level, 400)};
-                            ${getCellFillColor(cell.sector, cell.level, 200)};
-                            ${getCellFillColor(cell.sector, cell.level, 400)};
-                            `}
-                        `} 
-                        dur={`${cell.glow}ms`} 
-                        repeatCount="indefinite" />
-                  }            
-              </path>))
+              getBoardCells().map((column, i) => column.map((cell, j) => 
+                <Tooltip label={cell.particle && `V:${cell.particle.vitality} P:${cell.particle.power} S:${cell.particle.swiftness}`}>
+                  <path
+                    key={`cell-${i}-${j}`} 
+                    d={cell.d}
+                    onMouseEnter={() => props.onEnterCell(cell) } 
+                    onMouseLeave={() => props.onLeaveCell(cell) }
+                    onClick={() => props.onClickCell(cell)}
+                    fill={getCellFillColor(cell.sector, cell.level)} 
+                    stroke={`white`}
+                    strokeWidth={1} 
+                    fillRule="evenodd"
+                    style={({ cursor: "pointer" })} >
+                      {
+                        cell.glow &&
+                          <animate
+                            attributeName="fill" 
+                            values={`
+                              ${cell.glow ? `
+                                ${getCellFillColor(cell.sector, cell.level, 300)};
+                                ${getCellFillColor(cell.sector, cell.level, 200)};
+                                ${getCellFillColor(cell.sector, cell.level, 300)};
+                                ${getCellFillColor(cell.sector, cell.level, 300)};
+                                ${getCellFillColor(cell.sector, cell.level, 300)};
+                                ${getCellFillColor(cell.sector, cell.level, 300)};
+                                ${getCellFillColor(cell.sector, cell.level, 300)};
+                                ${getCellFillColor(cell.sector, cell.level, 300)};
+                                ` : `
+                                ${getCellFillColor(cell.sector, cell.level, 400)};
+                                ${getCellFillColor(cell.sector, cell.level, 200)};
+                                ${getCellFillColor(cell.sector, cell.level, 400)};
+                                `}
+                            `} 
+                            dur={`${cell.glow}ms`} 
+                            repeatCount="indefinite" />
+                      }            
+                  </path>
+                </Tooltip>
+              ))
             }
         </svg>
         {
