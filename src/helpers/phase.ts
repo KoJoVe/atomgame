@@ -12,19 +12,19 @@ import {
   SwapParticlesAction
 } from "../types/board";
 
-export type PhaseActions = 
+export type PhaseActionIdentifier = 
   "insertParticle" |
   "moveParticle" |
   "updateParticle" |
   "swapParticles"
 
-export type PhasePayloads = 
+export type PhasePayload = 
   InsertParticleAction |
   MoveParticleAction |
   UpdateParticleAction |
   SwapParticlesAction
   
-export const phaseActions: { [key in PhaseActions]: Function } = {
+export const phaseActions: { [key in PhaseActionIdentifier]: Function } = {
   insertParticle: insertParticle,
   moveParticle: moveParticle,
   updateParticle: updateParticle,

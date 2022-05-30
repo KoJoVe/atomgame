@@ -4,10 +4,12 @@ import { generateParticleInteractionPrioritySort } from '../generators/particle'
 import { generatePhases, generatePhasesStrings } from '../generators/phase';
 
 import { phaseActions } from '../helpers/phase';
+import { sleep } from '../helpers/sleep';
 
 import { Board } from '../types/board';
 import { Round } from '../types/round';
 import { Cell } from '../types/cell';
+import { PhaseAction } from '../types/phase';
 import { GameDispatch, GameState } from '../store';
 
 import { reloadCells, setupCells } from './board';
@@ -49,10 +51,23 @@ export const roundSlice = createSlice({
 export const { loadQueue, nextParticle, nextPhase, endRound } = roundSlice.actions;
 export const roundReducer = roundSlice.reducer;
 
-export const preparePhase = () => async (dispatch: GameDispatch, getState: () => GameState) => {
+export const runPhaseAction = async (phaseAction: PhaseAction, dispatch: GameDispatch) => {
+  if (!phaseAction.steps || phaseAction.steps.length < 1) {
+    return;
+  }
+
+  for (let i = 0; i < phaseAction.steps.length; i++) {
+    dispatch(phaseActions[phaseAction.steps[i].action](phaseAction.steps[i].payload));
+    dispatch(reloadCells());
+    await sleep(WAIT);      
+  }
+
+  return;
+}
+
+export const loadPhase = () => async (dispatch: GameDispatch, getState: () => GameState) => {
   const game = getState();
   const phases = generatePhases();
-  const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
   
   if (game.round.phases.length < 1 && game.round.queue.length >= 1) {
     dispatch(nextParticle());
@@ -63,36 +78,48 @@ export const preparePhase = () => async (dispatch: GameDispatch, getState: () =>
   }
   
   const updatedRoundGame = getState();
-  const cells = phases[updatedRoundGame.round.phases[0]](updatedRoundGame);
+  const phaseActions = phases[updatedRoundGame.round.phases[0]](updatedRoundGame);
 
-  if (cells.length > 0) {
-    dispatch(setupCells(cells));
+  const targets = phaseActions.filter(a => a.target).map(action => {
+    return {
+      sector: action.target?.sector,
+      level: action.target?.level,
+      icon: action.target?.icon,
+      phaseAction: action
+    } as Cell;
+  });
+
+  const autorun = phaseActions.filter(a => !a.target);
+  autorun.forEach(a => runPhaseAction(a, dispatch));
+
+  if (targets.length > 0) {
+    dispatch(setupCells(targets));
   } else {
-    await sleep(WAIT);
+    const current = updatedRoundGame.board.cells
+      .flatMap(col => col.map(cell => cell))
+      .find(cell => cell.particle?.id === updatedRoundGame.round.current);
+
+    if (!!current) {
+      await sleep(WAIT);
+    }
+
     dispatch(nextPhase());
-    dispatch(preparePhase());
+    dispatch(loadPhase());
   }
 }
 
-export const runPhase = (cell: Cell) => async (dispatch: GameDispatch) => {
-  dispatch(nextPhase());
-
-  if (!cell.phaseActions || cell.phaseActions.length < 1) {
+export const runCellPhaseAction = (cell: Cell) => async (dispatch: GameDispatch) => {
+  if (!cell || !cell.phaseAction) {
     return;
   }
 
-  const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+  await runPhaseAction(cell.phaseAction, dispatch);
 
-  for (let i = 0; i < cell.phaseActions.length; i++) {
-    dispatch(phaseActions[cell.phaseActions[i].action](cell.phaseActions[i].payload));
-    dispatch(reloadCells());
-    await sleep(WAIT);      
-  }
-
-  dispatch(preparePhase());
+  dispatch(nextPhase());
+  dispatch(loadPhase());
 }
 
 export const startRound = () => (dispatch: GameDispatch, getState: () => GameState) => {
   dispatch(loadQueue(getState().board));
-  dispatch(preparePhase());
+  dispatch(loadPhase());
 }

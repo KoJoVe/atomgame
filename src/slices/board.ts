@@ -2,7 +2,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { generateBoard } from '../generators/board';
 
-import { Board, InsertParticleAction, MoveParticleAction, UpdateParticleAction, SwapParticlesAction } from "../types/board";
+import { 
+  Board, 
+  InsertParticleAction, 
+  MoveParticleAction, 
+  UpdateParticleAction, 
+  SwapParticlesAction, 
+  SetupCellAction 
+} from "../types/board";
 import { Cell } from '../types/cell';
 
 import { COLUMNS, LEVELS } from '../constants';
@@ -85,7 +92,7 @@ export const boardSlice = createSlice({
     swapParticles: (board: Board, action: PayloadAction<SwapParticlesAction>) => {
 
     },
-    setupCells: (board: Board, action: PayloadAction<Cell[]>) => {
+    setupCells: (board: Board, action: PayloadAction<SetupCellAction[]>) => {
       const { payload } = action;
       board.cells = board.cells.map(col => col.map(cell => {
         const cellSetup = payload.find(c => c.level === cell.level && c.sector === cell.sector);
@@ -94,7 +101,7 @@ export const boardSlice = createSlice({
             ...cell,
             glow: cellSetup.glow,
             icon: cellSetup.icon,
-            phaseActions: cellSetup.phaseActions
+            phaseAction: cellSetup.phaseAction
           }
         }
         return {

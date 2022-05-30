@@ -1,11 +1,15 @@
 import { Directions } from "../helpers/directions";
 import { ParticleColor, particleColorMap } from "../helpers/particle";
-import { GameState } from "../store";
+
+import { generateEmptyParticle, generateParticleColor } from "./particle";
+
 import { Cell } from "../types/cell";
 import { Particle } from "../types/particle";
-import { generateParticleColor } from "./particle";
 
-export const generateRedPhase = (game: GameState): Cell[] => {
+import { GameState } from "../store";
+import { PhaseAction, PhaseStep } from "../types/phase";
+
+export const generateRedPhase = (game: GameState): PhaseAction[] => {
   if (game.round.current === undefined) {
     return [];
   }
@@ -19,14 +23,16 @@ export const generateRedPhase = (game: GameState): Cell[] => {
   const aboveCell = current!.level < levels && game.board.cells[current!.sector][current!.level + 1];
   const belowCell = current!.level > 0 && game.board.cells[current!.sector][current!.level - 1];
 
-  let cells: Cell[] = [];
+  let phaseActions: PhaseAction[] = [];
 
-  const generateCellActions = (cell: Cell, current: Cell, direction: Directions): Cell => {
+  const generatePhaseAction = (target: Cell, current: Cell, direction: Directions): PhaseAction => {
     return {
-      sector: cell.sector,
-      level: cell.level,
-      icon: direction === "up" ? "ArrowUpIcon" : "ArrowDownIcon",
-      phaseActions: [
+      target: {
+        sector: target.sector,
+        level: target.level,  
+        icon: direction === "up" ? "ArrowUpIcon" : "ArrowDownIcon",
+      },
+      steps: [
         {
           action: "moveParticle",
           payload: {
@@ -40,17 +46,17 @@ export const generateRedPhase = (game: GameState): Cell[] => {
   }
 
   if (aboveCell && !aboveCell.particle) {
-    cells.push(generateCellActions(aboveCell, current!, "up"));
+    phaseActions.push(generatePhaseAction(aboveCell, current!, "up"));
   }
 
   if (belowCell && !belowCell.particle) {
-    cells.push(generateCellActions(belowCell, current!, "down"));
+    phaseActions.push(generatePhaseAction(belowCell, current!, "down"));
   }
 
-  return cells;
+  return phaseActions;
 }
 
-export const generateBluePhase = (game: GameState): Cell[] => {
+export const generateBluePhase = (game: GameState): PhaseAction[] => {
   if (game.round.current === undefined) {
     return [];
   }
@@ -68,71 +74,102 @@ export const generateBluePhase = (game: GameState): Cell[] => {
   const leftCell = current!.sector === 0 ? game.board.cells[columns][current!.level] : game.board.cells[current!.sector - 1][current!.level];
   const rightCell = current!.sector === columns ? game.board.cells[0][current!.level] : game.board.cells[current!.sector + 1][current!.level];
 
-  let cells: Cell[] = [];
+  let phaseActions: PhaseAction[] = [];
 
-  const generateCellActions = (cell: Cell, current: Cell, powerDif: number): Cell => {
-    const color = current.particle!.power >= cell.particle!.power ? 
-      generateParticleColor(cell.particle!) : generateParticleColor(current.particle!);
+  const generatePhaseAction = (target: Cell, current: Cell, powerDif: number, followUp?: Cell): PhaseAction => {
+    const color = current.particle!.power >= target.particle!.power ? 
+      generateParticleColor(target.particle!) : generateParticleColor(current.particle!);
 
-    return {
-      sector: cell.sector,
-      level: cell.level,
-      icon: "LightiningIcon",
-      phaseActions: [
-        {
-          action: "updateParticle",
-          payload: {
-            sector: current.sector,
-            level: current.level,
-            property: particleColorMap[color],
-            amount: powerDif
-          }
-        },
-        {
-          action: "updateParticle",
-          payload: {
-            sector: cell.sector,
-            level: cell.level,
-            property: particleColorMap[color],
-            amount: -powerDif
+    const extraStep: PhaseStep | undefined = followUp && (
+      followUp.particle ?
+      {
+        action: "updateParticle",
+        payload: {
+          sector: followUp.sector,
+          level: followUp.level,
+          property: particleColorMap[color],
+          amount: powerDif
+        }
+      } :
+      {
+        action: "insertParticle",
+        payload: {
+          sector: followUp.sector,
+          level: followUp.level,
+          particle: {
+            ...generateEmptyParticle(),
+            [color]: powerDif
           }
         }
-      ]
+      }
+    )
+
+    let steps: PhaseStep[] = [
+      {
+        action: "updateParticle",
+        payload: {
+          sector: target.sector,
+          level: target.level,
+          property: particleColorMap[color],
+          amount: -powerDif
+        }
+      }
+    ]
+
+    if (!!extraStep) {
+      steps.push(extraStep);
+    }
+
+    // if (!followUp && target.level === 0) {
+    //   steps.push({
+        
+    //   })
+    // }
+
+    return {
+      target: {
+        sector: target.sector,
+        level: target.level,  
+        icon: "LightiningIcon",
+      },
+      steps: steps
     }
   }
+
+  //TODO: Need to add follow up
 
   if (aboveCell && aboveCell.particle) {
     const powerDif = current.particle!.power - aboveCell.particle!.power;
     if (powerDif !== 0) {
-      cells.push(generateCellActions(aboveCell, current!, powerDif));
+      phaseActions.push(generatePhaseAction(aboveCell, current!, powerDif));
     }
   }
 
   if (belowCell && belowCell.particle) {      
     const powerDif = current.particle!.power - belowCell.particle!.power;
     if (powerDif !== 0) {
-      cells.push(generateCellActions(belowCell, current!, powerDif));
+      phaseActions.push(generatePhaseAction(belowCell, current!, powerDif));
     }
   }
 
   if (leftCell && leftCell.particle) {      
     const powerDif = current.particle!.power - leftCell.particle!.power;
     if (powerDif !== 0) {
-      cells.push(generateCellActions(leftCell, current!, powerDif));
+      phaseActions.push(generatePhaseAction(leftCell, current!, powerDif));
     }
   }
 
   if (rightCell && rightCell.particle) {      
     const powerDif = current.particle!.power - rightCell.particle!.power;
     if (powerDif !== 0) {
-      cells.push(generateCellActions(rightCell, current!, powerDif));
+      phaseActions.push(generatePhaseAction(rightCell, current!, powerDif));
     }
   }
 
-  return cells;
+  return phaseActions;
 }
 
-export const generateGreenPhase = (game: GameState): Cell[] => {
+export const generateGreenPhase = (game: GameState): PhaseAction[] => {
   if (game.round.current === undefined) {
     return [];
   }
@@ -140,7 +177,7 @@ export const generateGreenPhase = (game: GameState): Cell[] => {
   return [];
 }
 
-export const generatePhases = (): { [key in ParticleColor]: (game: GameState) => Cell[] } => {
+export const generatePhases = (): { [key in ParticleColor]: (game: GameState) => PhaseAction[] } => {
   return {
     red: generateRedPhase,
     blue: generateBluePhase,

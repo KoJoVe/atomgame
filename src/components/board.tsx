@@ -6,9 +6,9 @@ import { useWindowDimensions } from "../hooks/window";
 import { generateParticleColor } from "../generators/particle";
 
 import { polarToCartesian } from "../helpers/coordinates";
+import { ParticleColor } from "../helpers/particle";
 import { iconComponents } from "../helpers/icons";
 import { ColorWeight } from "../helpers/color";
-import { ParticleColor } from "../helpers/particle";
 import { Icons } from "../helpers/icons";
 
 import { Cell } from "../types/cell";

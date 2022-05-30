@@ -8,7 +8,7 @@ import Controls from "./components/controls";
 
 import { Cell } from "./types/cell";
 
-import { runPhase, startRound } from "./slices/round";
+import { runCellPhaseAction, startRound } from "./slices/round";
 import { selectDeckCard } from "./slices/deck";
 import { hoverCell, insertParticle, restartBoard, unhoverCell } from "./slices/board";
 
@@ -25,7 +25,7 @@ export const App = () => {
   const selectedParticleIndex = useSelector(game => game.deck.selected);
   const selectedParticle = useSelector(game => selectedParticleIndex !== undefined && game.deck.cards[selectedParticleIndex]);
 
-  const onClickCell = (cell: Cell) => roundActive ? dispatch(runPhase(cell)) : 
+  const onClickCell = (cell: Cell) => roundActive ? dispatch(runCellPhaseAction(cell)) : 
     selectedParticle && dispatch(insertParticle({ ...cell, particle: selectedParticle }));
   const onEnterCell = (cell: Cell) => dispatch(hoverCell(cell));
   const onLeaveCell = () => dispatch(unhoverCell());
