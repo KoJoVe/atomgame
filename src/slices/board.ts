@@ -33,14 +33,8 @@ export const boardSlice = createSlice({
     insertParticle: (board: Board, action: PayloadAction<InsertParticleAction>) => {
       const { payload } = action;
 
-      let id = 0;
-      let ids = board.cells.flatMap(col => col.map(cell => cell)).filter(cell => !!cell.particle).map(cell => cell.particle!.id);
-      while (ids.find(i => i === id) !== undefined && id < board.cells.length * board.cells[0].length) {
-        id++;
-      }
-
       if (!board.cells[payload.sector][payload.level].particle) {
-        board.cells[payload.sector][payload.level].particle = { ...payload.particle, id: id };
+        board.cells[payload.sector][payload.level].particle = { ...payload.particle, id: Date.now() };
       }
     },
     moveParticle: (board: Board, action: PayloadAction<MoveParticleAction>) => {
@@ -79,18 +73,24 @@ export const boardSlice = createSlice({
         return;
       }
 
-      board.cells[payload.sector][payload.level].particle![payload.property] += payload.amount;
+      board.cells[payload.sector][payload.level].particle![payload.property] = payload.amount;
 
       if (
         board.cells[payload.sector][payload.level].particle!.vitality <= 0 &&
         board.cells[payload.sector][payload.level].particle!.power <= 0 &&
-        board.cells[payload.sector][payload.level].particle!.swiftness <= 0
+        Math.abs(board.cells[payload.sector][payload.level].particle!.swiftness) <= 0
       ) {
         board.cells[payload.sector][payload.level].particle = undefined;
       }
     },
     swapParticles: (board: Board, action: PayloadAction<SwapParticlesAction>) => {
+      const { payload } = action;
 
+      const p1 = board.cells[payload.sectorOne][payload.levelOne].particle;
+      const p2 = board.cells[payload.sectorTwo][payload.levelTwo].particle;
+
+      board.cells[payload.sectorOne][payload.levelOne].particle = p2;
+      board.cells[payload.sectorTwo][payload.levelTwo].particle = p1;
     },
     setupCells: (board: Board, action: PayloadAction<SetupCellAction[]>) => {
       const { payload } = action;

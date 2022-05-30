@@ -25,7 +25,7 @@ export const generateRedPhase = (game: GameState): PhaseAction[] => {
 
   let phaseActions: PhaseAction[] = [];
 
-  const generatePhaseAction = (target: Cell, current: Cell, direction: Directions): PhaseAction => {
+  const generatePhaseAction = (target: Cell, current: Cell, direction: Directions, swap = false): PhaseAction => {
     return {
       target: {
         sector: target.sector,
@@ -34,23 +34,38 @@ export const generateRedPhase = (game: GameState): PhaseAction[] => {
       },
       steps: [
         {
-          action: "moveParticle",
-          payload: {
+          action: !swap ? "moveParticle" : "swapParticles",
+          payload: !swap ? {
             sector: current.sector,
             level: current.level,
             direction: direction  
+          } : {
+            sectorOne: target.sector,
+            levelOne: target.level,
+            sectorTwo: current.sector,
+            levelTwo: current.level
           }
         }
       ]
     }
   }
 
-  if (aboveCell && !aboveCell.particle) {
-    phaseActions.push(generatePhaseAction(aboveCell, current!, "up"));
+  if (aboveCell) {
+    if (aboveCell.particle && current.particle!.vitality > aboveCell.particle!.vitality) {
+      phaseActions.push(generatePhaseAction(aboveCell, current!, "up", true));
+    }
+    if (!aboveCell.particle) {
+      phaseActions.push(generatePhaseAction(aboveCell, current!, "up"));
+    }
   }
 
-  if (belowCell && !belowCell.particle) {
-    phaseActions.push(generatePhaseAction(belowCell, current!, "down"));
+  if (belowCell) {
+    if (belowCell.particle && current.particle!.vitality > belowCell.particle!.vitality) {
+      phaseActions.push(generatePhaseAction(belowCell, current!, "down", true));
+    }
+    if (!belowCell.particle) {
+      phaseActions.push(generatePhaseAction(belowCell, current!, "down"));
+    }
   }
 
   return phaseActions;
@@ -79,6 +94,7 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
   const generatePhaseAction = (target: Cell, current: Cell, powerDif: number, followUp?: Cell): PhaseAction => {
     const color = current.particle!.power >= target.particle!.power ? 
       generateParticleColor(target.particle!) : generateParticleColor(current.particle!);
+    const property = particleColorMap[color];
 
     const extraStep: PhaseStep | undefined = followUp && (
       followUp.particle ?
@@ -87,8 +103,8 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
         payload: {
           sector: followUp.sector,
           level: followUp.level,
-          property: particleColorMap[color],
-          amount: powerDif
+          property: property,
+          amount: followUp.particle[property] + (followUp.particle[property] < 0 ? -powerDif : powerDif)
         }
       } :
       {
@@ -98,7 +114,7 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
           level: followUp.level,
           particle: {
             ...generateEmptyParticle(),
-            [color]: powerDif
+            [property]: target.particle![property] < 0 ? -powerDif : powerDif
           }
         }
       }
@@ -111,7 +127,7 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
           sector: target.sector,
           level: target.level,
           property: particleColorMap[color],
-          amount: -powerDif
+          amount: target.particle![particleColorMap[color]] + (target.particle![property] < 0 ? powerDif : -powerDif)
         }
       }
     ]
@@ -119,12 +135,6 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
     if (!!extraStep) {
       steps.push(extraStep);
     }
-
-    // if (!followUp && target.level === 0) {
-    //   steps.push({
-        
-    //   })
-    // }
 
     return {
       target: {
@@ -136,33 +146,35 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
     }
   }
 
-  //TODO: Need to add follow up
-
   if (aboveCell && aboveCell.particle) {
     const powerDif = current.particle!.power - aboveCell.particle!.power;
+    const followUp = game.board.cells[aboveCell.sector][aboveCell.level + 1];
     if (powerDif !== 0) {
-      phaseActions.push(generatePhaseAction(aboveCell, current!, powerDif));
+      phaseActions.push(generatePhaseAction(aboveCell, current!, powerDif, followUp));
     }
   }
 
   if (belowCell && belowCell.particle) {      
     const powerDif = current.particle!.power - belowCell.particle!.power;
+    const followUp = game.board.cells[belowCell.sector][belowCell.level - 1];
     if (powerDif !== 0) {
-      phaseActions.push(generatePhaseAction(belowCell, current!, powerDif));
+      phaseActions.push(generatePhaseAction(belowCell, current!, powerDif, followUp));
     }
   }
 
   if (leftCell && leftCell.particle) {      
     const powerDif = current.particle!.power - leftCell.particle!.power;
+    const followUp = leftCell.sector === 0 ? game.board.cells[columns][leftCell.level] : game.board.cells[leftCell.sector - 1][leftCell.level];
     if (powerDif !== 0) {
-      phaseActions.push(generatePhaseAction(leftCell, current!, powerDif));
+      phaseActions.push(generatePhaseAction(leftCell, current!, powerDif, followUp));
     }
   }
 
   if (rightCell && rightCell.particle) {      
     const powerDif = current.particle!.power - rightCell.particle!.power;
+    const followUp = rightCell.sector === columns ? game.board.cells[0][rightCell.level] : game.board.cells[rightCell.sector + 1][rightCell.level];
     if (powerDif !== 0) {
-      phaseActions.push(generatePhaseAction(rightCell, current!, powerDif));
+      phaseActions.push(generatePhaseAction(rightCell, current!, powerDif, followUp));
     }
   }
 
@@ -174,7 +186,106 @@ export const generateGreenPhase = (game: GameState): PhaseAction[] => {
     return [];
   }
 
-  return [];
+  const current = game.board.cells.flatMap(col => col.map(cell => cell)).find(cell => cell.particle?.id === game.round.current);
+  if (!current || current!.particle!.swiftness === 0) {
+    return [];
+  }
+
+  const columns = game.board.cells.length - 1;
+  const absSwiftnes = Math.abs(current!.particle!.swiftness);
+
+  let phaseSteps: PhaseStep[] = [];
+  let swiftness = current!.particle!.swiftness;
+  let sector = current.sector;
+  let level = current.level;
+
+  for (let i = 0; i < absSwiftnes; i++) {
+    const direction = swiftness > 0 ? "right" : "left";
+
+    if (direction === "right") {
+      const rightCell = sector === columns ? game.board.cells[0][level] : game.board.cells[sector + 1][level];
+      if (!rightCell.particle) {
+        phaseSteps.push({
+          action: "moveParticle",
+          payload: {
+            sector: sector,
+            level: level,
+            direction: "right"
+          }
+        });
+        sector = rightCell.sector;
+      } else {
+        phaseSteps.push({
+          action: "updateParticle",
+          payload: {
+            sector: sector,
+            level: level,
+            property: "swiftness",
+            amount: swiftness * -1
+          }
+        });
+        if (
+          (swiftness < 0 && rightCell.particle.swiftness > 0) ||
+          (swiftness > 0 && rightCell.particle.swiftness < 0)
+        ) {
+          phaseSteps.push({
+            action: "updateParticle",
+            payload: {
+              sector: rightCell.sector,
+              level: rightCell.level,
+              property: "swiftness",
+              amount: rightCell.particle!.swiftness * -1
+            }
+          });
+        }
+        swiftness = swiftness * -1;        
+      }
+    }
+
+    if (direction === "left") {
+      const leftCell = sector === 0 ? game.board.cells[columns][level] : game.board.cells[sector - 1][level];
+      if (!leftCell.particle) {
+        phaseSteps.push({
+          action: "moveParticle",
+          payload: {
+            sector: sector,
+            level: level,
+            direction: "left"
+          }
+        });
+        sector = leftCell.sector;
+      } else {
+        phaseSteps.push({
+          action: "updateParticle",
+          payload: {
+            sector: sector,
+            level: level,
+            property: "swiftness",
+            amount: swiftness * -1
+          }
+        });
+        if (
+          (swiftness < 0 && leftCell.particle.swiftness > 0) ||
+          (swiftness > 0 && leftCell.particle.swiftness < 0)
+        ) {
+          phaseSteps.push({
+            action: "updateParticle",
+            payload: {
+              sector: leftCell.sector,
+              level: leftCell.level,
+              property: "swiftness",
+              amount: leftCell.particle!.swiftness * -1
+            }
+          });
+        }
+        swiftness = swiftness * -1;        
+      }
+    }
+  }
+
+  return [{
+    steps: phaseSteps
+  }];
 }
 
 export const generatePhases = (): { [key in ParticleColor]: (game: GameState) => PhaseAction[] } => {
@@ -192,7 +303,7 @@ export const generatePhasesStrings = (particle?: Particle): ParticleColor[] => {
     return [];
   }
 
-  if (particle?.swiftness > 0) {
+  if (Math.abs(particle!.swiftness) > 0) {
     phases.push("green");
   }
   if (particle?.power > 0) {

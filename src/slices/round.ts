@@ -21,6 +21,7 @@ export const roundSlice = createSlice({
   initialState: {
     phases: [],
     queue: [],
+    played: []
   } as Round,
   reducers: {
     loadQueue: (round: Round, action: PayloadAction<Board>) => {
@@ -31,8 +32,14 @@ export const roundSlice = createSlice({
         .filter(cell => !!cell.particle)
         .sort((a, b) => generateParticleInteractionPrioritySort(a.particle!, b.particle!));
     },
+    reloadQueue: (round: Round, action: PayloadAction<Cell[]>) => {
+      const { payload } = action;
+      round.queue = round.queue
+        .concat(payload)
+    },
     nextParticle: (round: Round) => {
       const cell = round.queue[0];
+      round.played = cell && cell.particle ? round.played.concat([cell.particle.id]) : round.played;
       round.current = cell && cell.particle?.id;
       round.queue = round.queue.slice(1);
       round.phases = generatePhasesStrings(cell.particle);
@@ -44,14 +51,15 @@ export const roundSlice = createSlice({
       round.current = undefined;
       round.phases = [];
       round.queue = [];
+      round.played = [];
     }
   },
 });
 
-export const { loadQueue, nextParticle, nextPhase, endRound } = roundSlice.actions;
+export const { loadQueue, reloadQueue, nextParticle, nextPhase, endRound } = roundSlice.actions;
 export const roundReducer = roundSlice.reducer;
 
-export const runPhaseAction = async (phaseAction: PhaseAction, dispatch: GameDispatch) => {
+export const runPhaseAction = async (phaseAction: PhaseAction, dispatch: GameDispatch, getState: () => GameState) => {
   if (!phaseAction.steps || phaseAction.steps.length < 1) {
     return;
   }
@@ -60,6 +68,22 @@ export const runPhaseAction = async (phaseAction: PhaseAction, dispatch: GameDis
     dispatch(phaseActions[phaseAction.steps[i].action](phaseAction.steps[i].payload));
     dispatch(reloadCells());
     await sleep(WAIT);      
+  }
+
+  const game = getState();
+  const newParticles = game.board.cells.flatMap(c => c).filter(cell => {
+    if (!cell.particle) {
+      return false;
+    }
+
+    const onQueue = game.round.queue.find(q => q.particle!.id === cell.particle!.id);
+    const onPlayed = game.round.played.find(p => p === cell.particle!.id);
+
+    return !onQueue && !onPlayed;
+  });
+
+  if (newParticles.length > 0) {
+    dispatch(reloadQueue(newParticles));
   }
 
   return;
@@ -77,7 +101,7 @@ export const loadPhase = () => async (dispatch: GameDispatch, getState: () => Ga
     return;
   }
   
-  const updatedRoundGame = getState();
+  let updatedRoundGame = getState();
   const phaseActions = phases[updatedRoundGame.round.phases[0]](updatedRoundGame);
 
   const targets = phaseActions.filter(a => a.target).map(action => {
@@ -90,7 +114,17 @@ export const loadPhase = () => async (dispatch: GameDispatch, getState: () => Ga
   });
 
   const autorun = phaseActions.filter(a => !a.target);
-  autorun.forEach(a => runPhaseAction(a, dispatch));
+
+  if (autorun.length) {
+    await sleep(WAIT);
+  }
+
+  for (let i = 0; i < autorun.length; i++) {
+    const run = autorun[i];
+    await runPhaseAction(run, dispatch, getState);
+  }
+
+  updatedRoundGame = getState();
 
   if (targets.length > 0) {
     dispatch(setupCells(targets));
@@ -99,7 +133,7 @@ export const loadPhase = () => async (dispatch: GameDispatch, getState: () => Ga
       .flatMap(col => col.map(cell => cell))
       .find(cell => cell.particle?.id === updatedRoundGame.round.current);
 
-    if (!!current) {
+    if (!!current && autorun.length < 1) {
       await sleep(WAIT);
     }
 
@@ -108,12 +142,12 @@ export const loadPhase = () => async (dispatch: GameDispatch, getState: () => Ga
   }
 }
 
-export const runCellPhaseAction = (cell: Cell) => async (dispatch: GameDispatch) => {
+export const runCellPhaseAction = (cell: Cell) => async (dispatch: GameDispatch, getState: () => GameState) => {
   if (!cell || !cell.phaseAction) {
     return;
   }
 
-  await runPhaseAction(cell.phaseAction, dispatch);
+  await runPhaseAction(cell.phaseAction, dispatch, getState);
 
   dispatch(nextPhase());
   dispatch(loadPhase());

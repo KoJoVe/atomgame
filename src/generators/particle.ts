@@ -11,9 +11,9 @@ export const generateEmptyParticle = (): Particle => {
 }
 
 export const generateParticleInteractionPrioritySort = (a: Particle, b: Particle) => {
-  if (a.swiftness > b.swiftness) {
+  if (Math.abs(a.swiftness) > Math.abs(b.swiftness)) {
     return -1;
-  } else if (a.swiftness < b.swiftness) {
+  } else if (Math.abs(a.swiftness) < Math.abs(b.swiftness)) {
     return 1;
   } else if (a.power > b.power) {
     return -1;
@@ -28,7 +28,8 @@ export const generateParticleInteractionPrioritySort = (a: Particle, b: Particle
 }
 
 export const generateParticleColor = (particle: Particle): ParticleColor => {
-  if (particle.swiftness > particle.power && particle.swiftness > particle.vitality) {
+  const swiftness = Math.abs(particle.swiftness);
+  if (swiftness > particle.power && swiftness > particle.vitality) {
     return "green";
   } else if (particle.power > particle.vitality) {
     return "blue";
