@@ -103,7 +103,7 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
           height={radius * 2} >
             { 
               getBoardCells().map((column, i) => column.map((cell, j) => 
-                <Tooltip label={cell.particle && `V:${cell.particle.vitality} P:${cell.particle.power} S:${cell.particle.swiftness}`}>
+                <Tooltip key={`tooltip-${i}-${j}`}  label={cell.particle && `V:${cell.particle.vitality} P:${cell.particle.power} S:${cell.particle.swiftness}`}>
                   <path
                     key={`cell-${i}-${j}`} 
                     d={cell.d}
@@ -115,29 +115,6 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
                     strokeWidth={1} 
                     fillRule="evenodd"
                     style={({ cursor: "pointer" })} >
-                      {
-                        cell.glow &&
-                          <animate
-                            attributeName="fill" 
-                            values={`
-                              ${cell.glow ? `
-                                ${getCellFillColor(cell.sector, cell.level, 300)};
-                                ${getCellFillColor(cell.sector, cell.level, 200)};
-                                ${getCellFillColor(cell.sector, cell.level, 300)};
-                                ${getCellFillColor(cell.sector, cell.level, 300)};
-                                ${getCellFillColor(cell.sector, cell.level, 300)};
-                                ${getCellFillColor(cell.sector, cell.level, 300)};
-                                ${getCellFillColor(cell.sector, cell.level, 300)};
-                                ${getCellFillColor(cell.sector, cell.level, 300)};
-                                ` : `
-                                ${getCellFillColor(cell.sector, cell.level, 400)};
-                                ${getCellFillColor(cell.sector, cell.level, 200)};
-                                ${getCellFillColor(cell.sector, cell.level, 400)};
-                                `}
-                            `} 
-                            dur={`${cell.glow}ms`} 
-                            repeatCount="indefinite" />
-                      }            
                   </path>
                 </Tooltip>
               ))
@@ -152,20 +129,43 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
               icon = { component: iconComponents["ViewIcon"] };
             }
             
-            return (cell.icon || isCurrent) && <Icon
+            return (cell.icon || isCurrent) ? <Icon
               as={icon.component}
-              color={ isCurrent ? `white` : `black` }
+
+              color={ isCurrent || cell.particle ? `white` : `black` }
               key={`overlay-${i}-${j}`} 
               pos={`absolute`}
               cursor={`pointer`}
-              onClick={() => props.onClickCell(cell)}
-              onMouseEnter={() => props.onEnterCell(cell) } 
-              onMouseLeave={() => props.onLeaveCell(cell) }
               left={`${polarToCartesian(radius, radius, cell.radius, cell.rotation).x}px`} 
               top={`${polarToCartesian(radius, radius, cell.radius, cell.rotation).y}px`}
               transform={`translate(-50%, -50%) rotate(${cell.rotation}deg)`}
               animation={!isCurrent ? `${cell.glow || 1000}ms infinite icon` : ``}
-            />}))
+
+              onClick={() => props.onClickCell(cell)}
+              onMouseEnter={() => props.onEnterCell(cell) } 
+              onMouseLeave={() => props.onLeaveCell(cell) }
+            /> :  
+            <Box
+              userSelect={`none`}
+              color={ isCurrent || cell.particle ? `white` : `black` }
+              key={`overlay-${i}-${j}`} 
+              pos={`absolute`}
+              cursor={`pointer`}
+              left={`${polarToCartesian(radius, radius, cell.radius, cell.rotation).x}px`} 
+              top={`${polarToCartesian(radius, radius, cell.radius, cell.rotation).y}px`}
+              transform={`translate(-50%, -50%) rotate(${0}deg)`}
+
+              onClick={() => props.onClickCell(cell)}
+              onMouseEnter={() => props.onEnterCell(cell) } 
+              onMouseLeave={() => props.onLeaveCell(cell) }
+            >
+              { cell.particle ? `${
+                cell.particle.vitality +
+                cell.particle.power +
+                Math.abs(cell.particle.swiftness)
+              }` : `` }
+            </Box>
+          }))
         }
       </Box>
     </Box>
