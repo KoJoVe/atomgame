@@ -145,7 +145,7 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
               onMouseEnter={() => props.onEnterCell(cell) } 
               onMouseLeave={() => props.onLeaveCell(cell) }
             /> :  
-            <Box
+            cell.particle && <Box
               userSelect={`none`}
               color={ isCurrent || cell.particle ? `white` : `black` }
               key={`overlay-${i}-${j}`} 
@@ -159,11 +159,11 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
               onMouseEnter={() => props.onEnterCell(cell) } 
               onMouseLeave={() => props.onLeaveCell(cell) }
             >
-              { cell.particle ? `${
+              {`${
                 cell.particle.vitality +
                 cell.particle.power +
                 Math.abs(cell.particle.swiftness)
-              }` : `` }
+              }`}
             </Box>
           }))
         }
