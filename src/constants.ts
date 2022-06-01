@@ -1,3 +1,2 @@
-export const LEVELS = 6;
-export const COLUMNS = 16;
-export const WAIT = 420;
+export const LEVELS = 4;
+export const COLUMNS = 6;

@@ -14,8 +14,6 @@ import { GameDispatch, GameState } from '../store';
 
 import { reloadCells, setupCells } from './board';
 
-import { WAIT } from '../constants';
-
 export const roundSlice = createSlice({
   name: "round",
   initialState: {
@@ -67,7 +65,7 @@ export const runPhaseAction = async (phaseAction: PhaseAction, dispatch: GameDis
   for (let i = 0; i < phaseAction.steps.length; i++) {
     dispatch(phaseActions[phaseAction.steps[i].action](phaseAction.steps[i].payload));
     dispatch(reloadCells());
-    await sleep(WAIT);      
+    await sleep(200);      
   }
 
   const game = getState();
@@ -116,7 +114,7 @@ export const loadPhase = () => async (dispatch: GameDispatch, getState: () => Ga
   const autorun = phaseActions.filter(a => !a.target);
 
   if (autorun.length) {
-    await sleep(WAIT);
+    await sleep(300);
   }
 
   for (let i = 0; i < autorun.length; i++) {
@@ -134,7 +132,7 @@ export const loadPhase = () => async (dispatch: GameDispatch, getState: () => Ga
       .find(cell => cell.particle?.id === updatedRoundGame.round.current);
 
     if (!!current && autorun.length < 1) {
-      await sleep(WAIT);
+      await sleep(100);
     }
 
     dispatch(nextPhase());

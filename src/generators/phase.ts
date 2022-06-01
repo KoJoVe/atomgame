@@ -91,10 +91,11 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
 
   let phaseActions: PhaseAction[] = [];
 
-  const generatePhaseAction = (target: Cell, current: Cell, powerDif: number, followUp?: Cell): PhaseAction => {
+  const generatePhaseAction = (target: Cell, current: Cell, power: number, followUp?: Cell): PhaseAction => {
     const color = current.particle!.power >= target.particle!.power ? 
       generateParticleColor(target.particle!) : generateParticleColor(current.particle!);
     const property = particleColorMap[color];
+    const amount = Math.abs(target.particle![property]) - power > 0 ? power : Math.abs(target.particle![property]);
 
     const extraStep: PhaseStep | undefined = followUp && (
       followUp.particle ?
@@ -104,7 +105,7 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
           sector: followUp.sector,
           level: followUp.level,
           property: property,
-          amount: followUp.particle[property] + (followUp.particle[property] < 0 ? -powerDif : powerDif)
+          amount: followUp.particle[property] + (followUp.particle[property] < 0 ? -amount : amount)
         }
       } :
       {
@@ -114,7 +115,7 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
           level: followUp.level,
           particle: {
             ...generateEmptyParticle(),
-            [property]: target.particle![property] < 0 ? -powerDif : powerDif
+            [property]: target.particle![property] < 0 ? -amount : amount
           }
         }
       }
@@ -126,8 +127,10 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
         payload: {
           sector: target.sector,
           level: target.level,
-          property: particleColorMap[color],
-          amount: target.particle![particleColorMap[color]] + (target.particle![property] < 0 ? powerDif : -powerDif)
+          property: property,
+          amount: target.particle![property] > 0 ? 
+            target.particle![property] - amount : 
+            target.particle![property] + amount
         }
       }
     ]
@@ -146,36 +149,26 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
     }
   }
 
+  const power = current.particle!.power;
+
   if (aboveCell && aboveCell.particle) {
-    const powerDif = current.particle!.power - aboveCell.particle!.power;
     const followUp = game.board.cells[aboveCell.sector][aboveCell.level + 1];
-    if (powerDif !== 0) {
-      phaseActions.push(generatePhaseAction(aboveCell, current!, powerDif, followUp));
-    }
+    phaseActions.push(generatePhaseAction(aboveCell, current!, power, followUp));
   }
 
   if (belowCell && belowCell.particle) {      
-    const powerDif = current.particle!.power - belowCell.particle!.power;
     const followUp = game.board.cells[belowCell.sector][belowCell.level - 1];
-    if (powerDif !== 0) {
-      phaseActions.push(generatePhaseAction(belowCell, current!, powerDif, followUp));
-    }
+    phaseActions.push(generatePhaseAction(belowCell, current!, power, followUp));
   }
 
   if (leftCell && leftCell.particle) {      
-    const powerDif = current.particle!.power - leftCell.particle!.power;
     const followUp = leftCell.sector === 0 ? game.board.cells[columns][leftCell.level] : game.board.cells[leftCell.sector - 1][leftCell.level];
-    if (powerDif !== 0) {
-      phaseActions.push(generatePhaseAction(leftCell, current!, powerDif, followUp));
-    }
+    phaseActions.push(generatePhaseAction(leftCell, current!, power, followUp));
   }
 
   if (rightCell && rightCell.particle) {      
-    const powerDif = current.particle!.power - rightCell.particle!.power;
     const followUp = rightCell.sector === columns ? game.board.cells[0][rightCell.level] : game.board.cells[rightCell.sector + 1][rightCell.level];
-    if (powerDif !== 0) {
-      phaseActions.push(generatePhaseAction(rightCell, current!, powerDif, followUp));
-    }
+    phaseActions.push(generatePhaseAction(rightCell, current!, power, followUp));
   }
 
   return phaseActions;

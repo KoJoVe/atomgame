@@ -1,8 +1,6 @@
 import React, { FunctionComponent } from "react";
 import { Box, Icon, Text, theme, Tooltip } from "@chakra-ui/react";
 
-import { useWindowDimensions } from "../hooks/window";
-
 import { generateParticleColor } from "../generators/particle";
 
 import { polarToCartesian } from "../helpers/coordinates";
@@ -23,10 +21,9 @@ export interface BoardProps {
 }
 
 export const Board: FunctionComponent<BoardProps> = (props) => {
-  const { width } = useWindowDimensions();
-  
-  const radius = width/6;
-  const padding = 25;
+  const width = (props as any).w || 0;  
+  const padding = 10;
+  const radius = width/2 - (2*padding);
 
   const getBoardStyle = () => {
     return {
@@ -52,7 +49,7 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
     }
 
     const angle = 360/props.cells.length;
-    const r = radius;
+    const r = radius || 0;
     let cells: any[][] = [];
 
     for (let i = 0; i < props.cells.length; i++) {
@@ -153,17 +150,22 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
               cursor={`pointer`}
               left={`${polarToCartesian(radius, radius, cell.radius, cell.rotation).x}px`} 
               top={`${polarToCartesian(radius, radius, cell.radius, cell.rotation).y}px`}
-              transform={`translate(-50%, -50%) rotate(${0}deg)`}
+              transform={`translate(-50%, -50%)`}
 
               onClick={() => props.onClickCell(cell)}
               onMouseEnter={() => props.onEnterCell(cell) } 
               onMouseLeave={() => props.onLeaveCell(cell) }
             >
-              {`${
-                cell.particle.vitality +
-                cell.particle.power +
-                Math.abs(cell.particle.swiftness)
-              }`}
+              <Text fontSize={14} textAlign={`center`}>
+                {`${
+                  cell.particle.vitality +
+                  cell.particle.power +
+                  Math.abs(cell.particle.swiftness)
+                }`}
+              </Text>
+              {/* <Text fontSize={6}>
+                { `${cell.particle.vitality}/${cell.particle.power}/${Math.abs(cell.particle.swiftness)}` }                
+              </Text> */}
             </Box>
           }))
         }
