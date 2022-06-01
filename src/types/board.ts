@@ -6,6 +6,11 @@ import { Cell } from "./cell";
 import { Particle } from "./particle";
 import { PhaseAction } from "./phase";
 
+export interface DeleteParticleAction {
+  sector: number;
+  level: number;
+}
+
 export interface InsertParticleAction {
   sector: number;
   level: number;

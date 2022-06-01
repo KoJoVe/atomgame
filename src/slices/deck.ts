@@ -11,9 +11,10 @@ export const deckSlice = createSlice({
   } as Deck,
   reducers: {
     selectDeckCard: (deck: Deck, action: PayloadAction<number>) => { deck.selected = action.payload },
+    toggleDeleting: (deck: Deck) => { deck.deleting = !deck.deleting },
     resetDeck: (deck: Deck) => { deck.cards = generateDeck() }
   },
 })
 
-export const { selectDeckCard } = deckSlice.actions;
+export const { selectDeckCard, toggleDeleting } = deckSlice.actions;
 export const deckReducer = deckSlice.reducer;

@@ -1,19 +1,30 @@
 import React, { FunctionComponent } from "react";
 import { Box, Button } from "@chakra-ui/react";
-import { ArrowRightIcon, RepeatIcon } from "@chakra-ui/icons";
+import { ArrowRightIcon, DeleteIcon, RepeatIcon } from "@chakra-ui/icons";
 
 export interface ControlsProps {
   disabled?: boolean;
+  deleting?: boolean;
   onClickClear: () => void;
+  onClickDelete: () => void;
   onClickRun: () => void;
 }
 
 export const Controls: FunctionComponent<ControlsProps> = (props) => {
   return (
-    <Box>
+    <Box textAlign={`center`} mt={`30px`}>
       <Button 
-        ml={25}
-        mt={25}
+        ml={`10px`}
+        mr={`10px`}
+        disabled={props.disabled}
+        onClick={props.onClickDelete}
+        leftIcon={<DeleteIcon />} 
+        variant={props.deleting ? "solid" : "outline"}>
+        Delete
+      </Button>
+      <Button 
+        ml={`10px`}
+        mr={`10px`}
         disabled={props.disabled}
         onClick={props.onClickClear}
         leftIcon={<RepeatIcon />} 
@@ -21,8 +32,8 @@ export const Controls: FunctionComponent<ControlsProps> = (props) => {
         Clear
       </Button>
       <Button 
-        ml={25}
-        mt={25} 
+        ml={`10px`}
+        mr={`10px`}
         disabled={props.disabled}
         onClick={props.onClickRun}
         leftIcon={<ArrowRightIcon />}

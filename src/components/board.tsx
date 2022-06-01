@@ -23,7 +23,7 @@ export interface BoardProps {
 export const Board: FunctionComponent<BoardProps> = (props) => {
   const width = (props as any).w || 0;  
   const padding = 10;
-  const radius = width/2 - (2*padding);
+  const radius = width/2 - (padding);
 
   const getBoardStyle = () => {
     return {

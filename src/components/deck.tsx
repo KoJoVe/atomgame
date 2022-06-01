@@ -25,9 +25,9 @@ export const Deck: FunctionComponent<DeckProps> = (props) => {
     return { 
       ...getButtonStyle(),
       display: `inline`,
-      width: `${20}%`, 
+      width: `calc(25% - 20px)`, 
       height: `${110}px`,
-      margin: `25px 0 0 25px`,     
+      margin: `10px`
     }
   }
 
@@ -36,7 +36,7 @@ export const Deck: FunctionComponent<DeckProps> = (props) => {
   }
 
   return (
-    <Box>
+    <Box mt={`25px`}>
       { props.cards.map((p, i) => 
         <Button key={`card-${i}`} colorScheme={generateParticleColor(p)}
           { ...getCardStyle() }

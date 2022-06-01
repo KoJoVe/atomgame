@@ -8,7 +8,8 @@ import {
   MoveParticleAction, 
   UpdateParticleAction, 
   SwapParticlesAction, 
-  SetupCellAction 
+  SetupCellAction, 
+  DeleteParticleAction
 } from "../types/board";
 import { Cell } from '../types/cell';
 
@@ -36,6 +37,10 @@ export const boardSlice = createSlice({
       if (!board.cells[payload.sector][payload.level].particle) {
         board.cells[payload.sector][payload.level].particle = { ...payload.particle, id: Date.now() };
       }
+    },
+    deleteParticle: (board: Board, action: PayloadAction<DeleteParticleAction>) => {
+      const { payload } = action;
+      board.cells[payload.sector][payload.level].particle = undefined;
     },
     moveParticle: (board: Board, action: PayloadAction<MoveParticleAction>) => {
       const { payload } = action;
@@ -131,7 +136,8 @@ export const boardSlice = createSlice({
 export const { 
   hoverCell,
   unhoverCell, 
-  insertParticle, 
+  insertParticle,
+  deleteParticle, 
   moveParticle,
   updateParticle,
   swapParticles,

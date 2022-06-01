@@ -19,6 +19,6 @@ export const generateDeck = (): Particle[] => {
       vitality: 0,
       power: 0,
       swiftness: 1, 
-    },
+    }
   ]
 }
