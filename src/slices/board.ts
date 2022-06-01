@@ -111,7 +111,7 @@ export const boardSlice = createSlice({
         }
         return {
           ...cell,
-          phase: undefined,
+          phaseAction: undefined,
           glow: undefined,
           icon: undefined,
         };
@@ -121,7 +121,7 @@ export const boardSlice = createSlice({
       board.cells = board.cells.map(col => col.map(cell => {
         return {
           ...cell,
-          phase: undefined,
+          phaseAction: undefined,
           glow: undefined,
           icon: undefined,
         }
