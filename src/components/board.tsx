@@ -93,7 +93,6 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
   
   return (
     <Box>
-      <Text borderBottom={`1px solid ${theme.colors.gray[200]}`} maxW={250} mt={25} ml={25} fontSize={`sm`}>Formation Framework</Text>
       <Box position={`relative`} style={getBoardStyle()} >
         <svg viewBox={`0 0 ${radius * 2} ${radius * 2}`} 
           width={radius * 2} 

@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from "react";
-import { Box, Button, Text, theme } from "@chakra-ui/react";
+import { Box, Button } from "@chakra-ui/react";
 import { ArrowRightIcon, RepeatIcon } from "@chakra-ui/icons";
 
 export interface ControlsProps {
@@ -11,7 +11,6 @@ export interface ControlsProps {
 export const Controls: FunctionComponent<ControlsProps> = (props) => {
   return (
     <Box>
-      <Text borderBottom={`1px solid ${theme.colors.gray[200]}`} maxW={250} mt={25} ml={25} fontSize={`sm`}>Controls</Text>
       <Button 
         ml={25}
         mt={25}

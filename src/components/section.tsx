@@ -4,6 +4,7 @@ import { Box, theme, useBreakpointValue } from "@chakra-ui/react";
 import { useWindowDimensions } from "../hooks/window";
 
 export interface SectionProps {
+  size?: "full" | "half";
   title?: string;
   children?: ReactNode;
 };
