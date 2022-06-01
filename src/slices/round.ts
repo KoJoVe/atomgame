@@ -68,21 +68,21 @@ export const runPhaseAction = async (phaseAction: PhaseAction, dispatch: GameDis
     await sleep(200);      
   }
 
-  const game = getState();
-  const newParticles = game.board.cells.flatMap(c => c).filter(cell => {
-    if (!cell.particle) {
-      return false;
-    }
+  // const game = getState();
+  // const newParticles = game.board.cells.flatMap(c => c).filter(cell => {
+  //   if (!cell.particle) {
+  //     return false;
+  //   }
 
-    const onQueue = game.round.queue.find(q => q.particle!.id === cell.particle!.id);
-    const onPlayed = game.round.played.find(p => p === cell.particle!.id);
+  //   const onQueue = game.round.queue.find(q => q.particle!.id === cell.particle!.id);
+  //   const onPlayed = game.round.played.find(p => p === cell.particle!.id);
 
-    return !onQueue && !onPlayed;
-  });
+  //   return !onQueue && !onPlayed;
+  // });
 
-  if (newParticles.length > 0) {
-    dispatch(reloadQueue(newParticles));
-  }
+  // if (newParticles.length > 0) {
+  //   dispatch(reloadQueue(newParticles));
+  // }
 
   return;
 }
