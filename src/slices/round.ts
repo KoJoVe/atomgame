@@ -59,6 +59,7 @@ export const roundReducer = roundSlice.reducer;
 
 export const runPhaseAction = async (phaseAction: PhaseAction, dispatch: GameDispatch, getState: () => GameState) => {
   if (!phaseAction.steps || phaseAction.steps.length < 1) {
+    dispatch(reloadCells());
     return;
   }
 
@@ -83,7 +84,6 @@ export const runPhaseAction = async (phaseAction: PhaseAction, dispatch: GameDis
   // if (newParticles.length > 0) {
   //   dispatch(reloadQueue(newParticles));
   // }
-
   return;
 }
 

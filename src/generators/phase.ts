@@ -68,6 +68,16 @@ export const generateRedPhase = (game: GameState): PhaseAction[] => {
     }
   }
 
+  if (phaseActions.length > 0) {
+    phaseActions.push({
+      target: {
+        sector: current!.sector,
+        level: current!.level,  
+      },
+      steps: []
+    });
+  }
+
   return phaseActions;
 }
 
@@ -171,6 +181,16 @@ export const generateBluePhase = (game: GameState): PhaseAction[] => {
     phaseActions.push(generatePhaseAction(rightCell, current!, power, followUp));
   }
 
+  if (phaseActions.length > 0) {
+    phaseActions.push({
+      target: {
+        sector: current!.sector,
+        level: current!.level,  
+      },
+      steps: []
+    });
+  }
+  
   return phaseActions;
 }
 
