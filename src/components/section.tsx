@@ -1,10 +1,9 @@
 import React, { FunctionComponent, ReactNode } from "react";
 import { Box, theme, useBreakpointValue } from "@chakra-ui/react";
 
-import { useWindowDimensions } from "../hooks/window";
+import { useWindowDimensions } from "../hooks/dimensions";
 
 export interface SectionProps {
-  size?: "full" | "half";
   title?: string;
   children?: ReactNode;
 };
@@ -12,8 +11,8 @@ export interface SectionProps {
 export const Section: FunctionComponent<SectionProps> = (props) => {
   const { width, height } = useWindowDimensions();
 
-  const w = useBreakpointValue({ base: `100%`, sm: `100%`, md: `50%` }) || 0;
-  const h = useBreakpointValue({ base: `auto`, sm: `auto`, md: `${height}` }) || 0;
+  const w = useBreakpointValue({ base: `100%`, sm: `100%`, md: `50%` }) || `0`;
+  const h = useBreakpointValue({ base: `auto`, sm: `auto`, md: `${height}` }) || `0`;
 
   const widthPx = useBreakpointValue({ base: width, sm: width, md: width/2 }) || 0;
 
@@ -28,7 +27,7 @@ export const Section: FunctionComponent<SectionProps> = (props) => {
 
   const childrenWithProps = React.Children.map(props.children, child => {
     if (React.isValidElement(child)) {
-      return React.cloneElement(child, { w: widthPx });
+      return React.cloneElement(child, { w: widthPx } as any);
     }
     return child;
   });

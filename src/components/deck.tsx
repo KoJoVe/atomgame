@@ -1,55 +1,86 @@
-import React, { FunctionComponent } from "react";
-import { Box, Button, Text, theme } from "@chakra-ui/react";
+import React, { FunctionComponent, useRef } from "react";
+import { Box, Text, theme, useBreakpointValue } from "@chakra-ui/react";
 
-import { generateParticleColor } from "../generators/particle";
-
-import { Particle } from "../types/particle";
+import Board from "./board";
+import { Color } from "../helpers/color";
+import { useContainerDimensions } from "../hooks/dimensions";
+import { generateBoard } from "../generators/board";
+import { Card } from "../types/card";
+import { COLUMNS, LEVELS } from "../constants";
 
 export interface DeckProps {
-  cards: Particle[];
+  cards: Card[];
   selected?: number;
-  onSelectCard: (index: number) => void;
+  onClickCard: (index: number) => void;
 }
 
 export const Deck: FunctionComponent<DeckProps> = (props) => {
+  const cardRef = useRef();
+  const cardMargin = 10;
+  const cardSize = useBreakpointValue({ base: 25, sm: 25, md: 16.33, lg: 16.33 }) || 0;
+  const boardPadding = 30;
+  const width = useContainerDimensions(cardRef).width/(100/cardSize) - cardMargin;
 
-  const getButtonStyle = () => {
+  const getCardStyle = (selected: boolean, color: Color) => {
     return {
-      outline: `none`,
-      outlineColor: `white`,
-      outlineOffset: `1px`,
-    }
-  }
-
-  const getCardStyle = () => {
-    return { 
-      ...getButtonStyle(),
-      display: `inline`,
-      width: `calc(25% - 20px)`, 
-      height: `${110}px`,
-      margin: `10px`
+      float: `left` as any,
+      position: `relative` as any,
+      left: `${cardMargin/2}px`,
+      width: `calc(${cardSize}% - ${cardMargin}px)`, 
+      height: `${width*1.6}px`,
+      marginRight: `${cardMargin}px`,
+      marginBottom: `${cardMargin}px`,
+      border: `1px solid ${selected ? `white` : theme.colors[color][300]}`,
+      borderRadius: `5px`,
+      cursor: `pointer`,
+      background: `${selected ? theme.colors.gray[700] : theme.colors.gray[800]}`,
+      _hover: {
+        background: `${theme.colors.gray[700]}`,
+      }
     }
   }
 
   const onClickCard = (index: number) => {
-    props.onSelectCard(index);
+    props.onClickCard(index);
+  }
+
+  const getCells = (card: Card) => {
+    return card.loose ? [] : generateBoard(COLUMNS, LEVELS)
+      .map(column => column.map(cell => ({
+        ...cell, particle: card.cells.find(c => c.sector === cell.sector && c.level === cell.level)?.particle 
+      })));
+  }
+
+  const getValue = (card: Card, color: Color) => {
+    return card.cells.filter(c => c.particle && c.particle.color === color).length + card.nucleus.particles[color];
   }
 
   return (
-    <Box mt={`25px`}>
-      { props.cards.map((p, i) => 
-        <Button key={`card-${i}`} colorScheme={generateParticleColor(p)}
-          { ...getCardStyle() }
-          variant={props.selected === i ? `solid` : `outline`}
-          onClick={() => onClickCard(i)} >
-            <Box w={25} h={25} borderRadius={25} m={"auto"} mb={3} 
-              bg={props.selected === i ? theme.colors[generateParticleColor(p)][200] : theme.colors[generateParticleColor(p)][500]}></Box>
-            <Text fontSize="xs">VIT {p.vitality}</Text>
-            <Text fontSize="xs">POW {p.power}</Text>
-            <Text fontSize="xs">SWI {p.swiftness}</Text>
-        </Button>
-      )}
-    </Box>
+    <div style={{ overflow: `hidden`, marginTop: `25px` }} ref={cardRef as any}>
+      { props.cards.map((card, i) => 
+          <Box key={`card-${i}`} { ...getCardStyle(props.selected === i, card.color) } onClick={() => onClickCard(i)} >
+            <Box 
+              display={`flex`} 
+              justifyContent={`center`} 
+              alignItems={`center`} 
+              height={width/3} 
+              borderBottom={`1px solid ${props.selected === i ? `white` : theme.colors[card.color as Color][300]}`} >
+                <Text textAlign={`center`} fontSize={`10px`} >{card.name}</Text>
+            </Box>
+            <Box pos={`relative`} left={`${boardPadding/2}px`}>
+              <Board 
+                cells={getCells(card)}
+                nucleus={card.nucleus}
+                mode="card"
+                w={width - boardPadding} />
+            </Box>
+            <Text fontSize={`10px`} ml={`${cardMargin}px`} mt={width/2.2} >Aspect [{getValue(card, `red`)}]</Text>
+            <Text fontSize={`10px`} ml={`${cardMargin}px`}>Will [{getValue(card, `green`)}]</Text>
+            <Text fontSize={`10px`} ml={`${cardMargin}px`}>Power [{getValue(card, `blue`)}]</Text>
+          </Box>
+        )
+      }
+    </div>
   );
 }
 

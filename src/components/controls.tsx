@@ -1,13 +1,11 @@
 import React, { FunctionComponent } from "react";
 import { Box, Button } from "@chakra-ui/react";
-import { ArrowRightIcon, DeleteIcon, RepeatIcon } from "@chakra-ui/icons";
+import { DeleteIcon, AddIcon, MinusIcon, CheckIcon } from "@chakra-ui/icons";
 
 export interface ControlsProps {
-  disabled?: boolean;
   deleting?: boolean;
-  onClickClear: () => void;
+  onClickRestart: () => void;
   onClickDelete: () => void;
-  onClickRun: () => void;
 }
 
 export const Controls: FunctionComponent<ControlsProps> = (props) => {
@@ -16,30 +14,26 @@ export const Controls: FunctionComponent<ControlsProps> = (props) => {
       <Button 
         ml={`10px`}
         mr={`10px`}
-        disabled={props.disabled}
         onClick={props.onClickDelete}
-        leftIcon={<DeleteIcon />} 
-        variant={props.deleting ? "solid" : "outline"}>
-        Delete
+        leftIcon={ props.deleting ? <MinusIcon /> : <AddIcon /> } 
+        variant={"outline"}>
+        { props.deleting ? "Extracting" : "Fusing" }
       </Button>
       <Button 
         ml={`10px`}
         mr={`10px`}
-        disabled={props.disabled}
-        onClick={props.onClickClear}
-        leftIcon={<RepeatIcon />} 
+        leftIcon={ <CheckIcon /> } 
+        variant={"outline"}>
+        Apply
+      </Button>
+      <Button 
+        ml={`10px`}
+        mr={`10px`}
+        onClick={props.onClickRestart}
+        leftIcon={<DeleteIcon />} 
         variant="outline">
         Clear
       </Button>
-      <Button 
-        ml={`10px`}
-        mr={`10px`}
-        disabled={props.disabled}
-        onClick={props.onClickRun}
-        leftIcon={<ArrowRightIcon />}
-        variant="outline">
-        Run
-      </Button>   
     </Box>
   );
 }

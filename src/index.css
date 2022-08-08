@@ -23,13 +23,7 @@ code {
 }
 
 @keyframes icon {
-  0% { font-size: 1em; }
-  12.5% { font-size: 1.5em; }
-  25% { font-size: 1em; }
-  37.5% { font-size: 1em; }
-  50% { font-size: 1em; }
-  62.5% { font-size: 1em; }
-  75% { font-size: 1em; }
-  87.5% { font-size: 1em; }
-  100% { font-size: 1em; }
+  0% { opacity: 0 }
+  50% { opacity: 1 }
+  100% { opacity: 0 }
 }

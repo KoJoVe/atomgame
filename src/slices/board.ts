@@ -3,146 +3,69 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { generateBoard } from '../generators/board';
 
 import { 
-  Board, 
-  InsertParticleAction, 
-  MoveParticleAction, 
-  UpdateParticleAction, 
-  SwapParticlesAction, 
-  SetupCellAction, 
-  DeleteParticleAction
+  Board,
+  ApplyCurrentAction,
+  DeleteCurrentAction,
+  HighlightCellAction,
+  UnHighlightCellAction
 } from "../types/board";
-import { Cell } from '../types/cell';
 
 import { COLUMNS, LEVELS } from '../constants';
+import { Particle } from '../types/particle';
+import { Color } from '../helpers/color';
 
 export const boardSlice = createSlice({
   name: "board",
   initialState: {
-    cells: []
+    cells: [],
+    nucleus: { particles: { red: 0, green: 0, blue: 0 } }
   } as Board,
   reducers: {
-    hoverCell: (board: Board, action: PayloadAction<Cell>) => {
-      const { payload } = action;
-      board.hovered = {
-        sector: payload.sector,
-        level: payload.level,
-      }
-    },
-    unhoverCell: (board: Board) => {
-      board.hovered = undefined;
-    },
-    insertParticle: (board: Board, action: PayloadAction<InsertParticleAction>) => {
-      const { payload } = action;
-
-      if (!board.cells[payload.sector][payload.level].particle) {
-        board.cells[payload.sector][payload.level].particle = { ...payload.particle, id: Date.now() };
-      }
-    },
-    deleteParticle: (board: Board, action: PayloadAction<DeleteParticleAction>) => {
-      const { payload } = action;
-      board.cells[payload.sector][payload.level].particle = undefined;
-    },
-    moveParticle: (board: Board, action: PayloadAction<MoveParticleAction>) => {
-      const { payload } = action;
-      const particle =  board.cells[payload.sector][payload.level].particle;
-
-      let newSector = payload.sector;
-      let newLevel = payload.level;
-
-      switch (payload.direction) {
-        case "up":
-          newLevel = board.cells[0] && (payload.level === board.cells[0].length - 1) ? payload.level : payload.level + 1;
-          break;
-        case "right":
-          newSector = payload.sector === board.cells.length - 1 ? 0 : payload.sector + 1;
-          break;
-        case "down":
-          newLevel = payload.level === 0 ? 0 : payload.level - 1;
-          break;
-        case "left":
-          newSector = payload.sector === 0 ? board.cells.length - 1 : payload.sector - 1;
-          break;
-      }
-
-      if (!!board.cells[newSector][newLevel].particle) {
-        return;
-      }
-            
-      board.cells[payload.sector][payload.level].particle = undefined;
-      board.cells[newSector][newLevel].particle = particle;
-    },
-    updateParticle: (board: Board, action: PayloadAction<UpdateParticleAction>) => {
-      const { payload } = action;
-
-      if (!board.cells[payload.sector][payload.level].particle) {
-        return;
-      }
-
-      board.cells[payload.sector][payload.level].particle![payload.property] = payload.amount;
-
-      if (
-        board.cells[payload.sector][payload.level].particle!.vitality <= 0 &&
-        board.cells[payload.sector][payload.level].particle!.power <= 0 &&
-        Math.abs(board.cells[payload.sector][payload.level].particle!.swiftness) <= 0
-      ) {
-        board.cells[payload.sector][payload.level].particle = undefined;
-      }
-    },
-    swapParticles: (board: Board, action: PayloadAction<SwapParticlesAction>) => {
-      const { payload } = action;
-
-      const p1 = board.cells[payload.sectorOne][payload.levelOne].particle;
-      const p2 = board.cells[payload.sectorTwo][payload.levelTwo].particle;
-
-      board.cells[payload.sectorOne][payload.levelOne].particle = p2;
-      board.cells[payload.sectorTwo][payload.levelTwo].particle = p1;
-    },
-    setupCells: (board: Board, action: PayloadAction<SetupCellAction[]>) => {
-      const { payload } = action;
-      board.cells = board.cells.map(col => col.map(cell => {
-        const cellSetup = payload.find(c => c.level === cell.level && c.sector === cell.sector);
-        if (cellSetup) {
-          return {
-            ...cell,
-            glow: cellSetup.glow,
-            icon: cellSetup.icon,
-            phaseAction: cellSetup.phaseAction
-          }
-        }
-        return {
-          ...cell,
-          phaseAction: undefined,
-          glow: undefined,
-          icon: undefined,
-        };
-      }));
-    },
-    reloadCells: (board: Board) => {
-      board.cells = board.cells.map(col => col.map(cell => {
-        return {
-          ...cell,
-          phaseAction: undefined,
-          glow: undefined,
-          icon: undefined,
-        }
-      }))
-    },
     restartBoard: (board: Board) => {
       board.cells = generateBoard(COLUMNS, LEVELS);
+      board.nucleus = { particles: { red: 0, green: 0, blue: 0 } };
+    },
+    highlightCell: (board: Board, action: PayloadAction<HighlightCellAction>) => {
+      const { payload } = action;
+      board.cells = board.cells.map(col => col.map(c => ({ ...c, highlighted: undefined })))
+      if (payload.sector !== undefined && payload.sector >= 0 && payload.level !== undefined && payload.level >= 0) {
+        board.cells[payload.sector][payload.level].highlighted = true; 
+      } else {
+        board.nucleus.highlighted = true;
+      }
+    },
+    unHighlightCell: (board: Board, action: PayloadAction<UnHighlightCellAction>) => {
+      const { payload } = action;
+      if (payload.sector !== undefined && payload.sector >= 0 && payload.level !== undefined && payload.level >= 0) {
+        board.cells[payload.sector][payload.level].highlighted = false; 
+      } else {
+        board.nucleus.highlighted = undefined;
+      }
+    },
+    applyCurrent: (board: Board, action: PayloadAction<ApplyCurrentAction>) => {
+      const { payload } = action;
+      board.cells = board.cells.map((col, i) => col.map((cell, j) => 
+        payload.card.cells.find(c => c.sector === i && c.level === j) ? payload.card.cells.find(c => c.sector === i && c.level === j)! : cell
+      ));
+      board.nucleus.particles = Object.keys(board.nucleus.particles).reduce((o, k) => {
+        return {
+          ...o,
+          [k]: board.nucleus.particles[k as Color] + payload.card.nucleus.particles[k as Color]
+        }
+      }, {} as { [key in Color]: number; });
+    },
+    deleteCurrent: (board: Board, action: PayloadAction<DeleteCurrentAction>) => {
+      const { payload } = action;
+      // board.cells[payload.sector][payload.level].particle = undefined;
     }
   }
 });
 
 export const { 
-  hoverCell,
-  unhoverCell, 
-  insertParticle,
-  deleteParticle, 
-  moveParticle,
-  updateParticle,
-  swapParticles,
-  setupCells,
-  reloadCells,
   restartBoard,
+  highlightCell,
+  unHighlightCell,
+  applyCurrent,
+  deleteCurrent,
 } = boardSlice.actions;
 export const boardReducer = boardSlice.reducer;

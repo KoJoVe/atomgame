@@ -13,7 +13,9 @@ export const deckSlice = createSlice({
     selectDeckCard: (deck: Deck, action: PayloadAction<number>) => { 
       deck.selected = deck.selected === action.payload ? undefined : action.payload;
     },
-    toggleDeleting: (deck: Deck) => { deck.deleting = !deck.deleting },
+    toggleDeleting: (deck: Deck) => { 
+      deck.deleting = !deck.deleting;
+    },
     resetDeck: (deck: Deck) => { deck.cards = generateDeck() }
   },
 })

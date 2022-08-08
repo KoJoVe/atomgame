@@ -1,54 +1,28 @@
-import { Directions } from "../helpers/directions";
-import { Icons } from "../helpers/icons";
-import { ParticleProperties } from "../helpers/particle";
-
+import { Color } from "../helpers/color";
+import { Card } from "./card";
 import { Cell } from "./cell";
-import { Particle } from "./particle";
-import { PhaseAction } from "./phase";
+import { Nucleus } from "./nucleus";
 
-export interface DeleteParticleAction {
-  sector: number;
-  level: number;
+export interface DeleteCurrentAction {
+  card: Card;
 }
 
-export interface InsertParticleAction {
-  sector: number;
-  level: number;
-  particle: Particle;
+export interface ApplyCurrentAction {
+  card: Card;
 }
 
-export interface MoveParticleAction {
-  sector: number;
-  level: number;
-  direction: Directions;
+export interface HighlightCellAction {
+  sector?: number;
+  level?: number;
+  color?: Color;
 }
 
-export interface UpdateParticleAction {
-  sector: number;
-  level: number;
-  property: ParticleProperties;
-  amount: number;
-}
-
-export interface SwapParticlesAction {
-  sectorOne: number;
-  levelOne: number;
-  sectorTwo: number;
-  levelTwo: number;
-}
-
-export interface SetupCellAction {
-  sector: number;
-  level: number;
-  glow?: number;
-  icon?: Icons;
-  phaseAction?: PhaseAction;
+export interface UnHighlightCellAction {
+  sector?: number;
+  level?: number;
 }
 
 export type Board = {
   cells: Cell[][];
-  hovered?: {
-    sector: number;
-    level: number;
-  }
+  nucleus: Nucleus;
 }

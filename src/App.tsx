@@ -8,33 +8,56 @@ import Controls from "./components/controls";
 
 import { Cell } from "./types/cell";
 
-import { runCellPhaseAction, startRound } from "./slices/round";
 import { selectDeckCard, toggleDeleting } from "./slices/deck";
-import { deleteParticle, hoverCell, insertParticle, restartBoard, unhoverCell } from "./slices/board";
+import { 
+  restartBoard, 
+  highlightCell, 
+  unHighlightCell,
+  applyCurrent,
+  deleteCurrent, 
+} from "./slices/board";
 
+import { getLooseCard, rotateCard } from "./helpers/card";
 import { useDispatch, useSelector } from "./hooks/game";
 
 export const App = () => {
   const dispatch = useDispatch();
 
-  const cells = useSelector(game => game.board.cells);
-  const cards = useSelector(game => game.deck.cards);
-  const deleting = useSelector(game => game.deck.deleting);
-  const roundActive = useSelector(game => game.round.queue.length > 0 || game.round.current !== undefined);
-  const currentParticle = useSelector(game => game.round.current);
-  const hoveredCell = useSelector(game => game.board.hovered);
-  const selectedParticleIndex = useSelector(game => game.deck.selected);
-  const selectedParticle = useSelector(game => selectedParticleIndex !== undefined && game.deck.cards[selectedParticleIndex]);
+  const cells = useSelector(g => g.board.cells);
+  const nucleus = useSelector(g => g.board.nucleus);
+  const cards = useSelector(g => g.deck.cards);
+  const deleting = useSelector(g => g.deck.deleting);
+  const index = useSelector(g => g.deck.selected);
+  const highlighted = useSelector(g => (g.board.cells.find(col => col.find(c => c.highlighted)) || []).find(c => c.highlighted));
+  const card = useSelector(g => index !== undefined && g.deck.cards[index]) || undefined;
+  const current = card?.loose ? (nucleus.highlighted ? card : highlighted && getLooseCard(card, highlighted)) : rotateCard(card, (highlighted && highlighted.sector) || 0);
 
-  const onClickCell = (cell: Cell) => roundActive ? dispatch(runCellPhaseAction(cell)) :
-    deleting ? dispatch(deleteParticle(cell)) : 
-    selectedParticle && dispatch(insertParticle({ ...cell, particle: selectedParticle }));
-  const onEnterCell = (cell: Cell) => dispatch(hoverCell(cell));
-  const onLeaveCell = () => dispatch(unhoverCell());
-  const onSelectCard = (index: number) => dispatch(selectDeckCard(index));
+  const apply = () => {
+    if (!current) {
+      return;
+    }
+    if (deleting) {
+      dispatch(deleteCurrent({ card: current }))
+    } else {
+      dispatch(applyCurrent({ card: current }))
+    }
+    dispatch(selectDeckCard(-1));
+  }
+
+  const onEnterCell = (cell: Cell) => dispatch(highlightCell(cell));
+  const onLeaveCell = (cell: Cell) => dispatch(unHighlightCell(cell));
+  const onClickCell = () => apply();
+  const onEnterNucleus = () => dispatch(highlightCell({}));
+  const onLeaveNucleus = () => dispatch(unHighlightCell({}));  
+  const onClickNucleus = () => apply();
+  // const onEnterNucleusParticle = (color?: Color) => dispatch(highlightCell({ color }));
+  // const onLeaveNucleusParticle = () => dispatch(unHighlightCell({}));  
+  // const onClickNucleusParticle = (color: Color) => particle?.color === color ? dispatch(insertNucleusParticle({ particle: particle })) : '';
+
   const onClickDelete = () => dispatch(toggleDeleting());
-  const onClickClear = () => dispatch(restartBoard());
-  const onClickRun = () => dispatch(startRound());
+  const onClickRestart = () => dispatch(restartBoard());
+
+  const onClickCard = (index: number) => dispatch(selectDeckCard(index));
 
   useEffect(() => {
     dispatch(restartBoard());
@@ -45,23 +68,24 @@ export const App = () => {
       <Section>
         <Board
           cells={cells}
-          current={currentParticle}
-          hoveredCell={hoveredCell}
-          onClickCell={onClickCell}
+          nucleus={nucleus}
+          current={current}
           onEnterCell={onEnterCell}
-          onLeaveCell={onLeaveCell} />
-        <Controls
-          disabled={roundActive}
-          deleting={deleting}
-          onClickDelete={onClickDelete}
-          onClickClear={onClickClear}
-          onClickRun={onClickRun} />     
+          onLeaveCell={onLeaveCell}
+          onClickCell={onClickCell} 
+          onEnterNucleus={onEnterNucleus}
+          onLeaveNucleus={onLeaveNucleus}
+          onClickNucleus={onClickNucleus} />
       </Section>
-      <Section>
+      <Section> 
         <Deck
           cards={cards}
-          selected={selectedParticleIndex}
-          onSelectCard={onSelectCard} />
+          selected={index}
+          onClickCard={onClickCard} />
+        <Controls
+          deleting={deleting}
+          onClickDelete={onClickDelete}
+          onClickRestart={onClickRestart} />    
       </Section>
     </Box>
   );

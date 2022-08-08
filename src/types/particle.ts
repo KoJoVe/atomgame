@@ -1,5 +1,5 @@
-import { ParticleProperties } from "../helpers/particle";
+import { Color } from "../helpers/color";
 
 export type Particle = {
-  [key in ParticleProperties]: number; 
+  color: Color;
 } 

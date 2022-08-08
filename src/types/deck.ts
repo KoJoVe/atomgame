@@ -1,7 +1,7 @@
-import { Particle } from "./particle";
+import { Card } from "./card";
 
 export type Deck = {
-  cards: Particle[];
+  cards: Card[];
   selected?: number;
   deleting?: boolean;
 }

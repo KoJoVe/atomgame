@@ -1,2 +1,2 @@
 export const LEVELS = 4;
-export const COLUMNS = 6;
+export const COLUMNS = 12;
