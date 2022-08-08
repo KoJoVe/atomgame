@@ -1,27 +1,24 @@
-import React, { FunctionComponent, useCallback, useEffect, useRef, useState } from "react";
+import React, { FunctionComponent, useEffect, useState } from "react";
 import { Box, Text, theme } from "@chakra-ui/react";
-
-import { GiAbstract069 } from "react-icons/gi";
 
 import { polarToCartesian } from "../helpers/coordinates";
 import { Color, ColorWeight } from "../helpers/color";
 
-import { useAnimationFrame } from "../hooks/animationFrame";
-
 import { Cell } from "../types/cell";
 import { Nucleus } from "../types/nucleus";
 import { Card } from "../types/card";
-import { COLUMNS, LEVELS } from "../constants";
 
 export interface BoardProps {
   mode?: 'board' | 'card';
   cells: Cell[][];
   nucleus: Nucleus;
   current?: Card;
+  deleting?: boolean;
   middleButton?: 'extracting' | 'fusing';
   onClickCell?: (cell: Cell) => void;
   onEnterCell?: (cell: Cell) => void;
   onLeaveCell?: (cell: Cell) => void;
+  onClickButton?: () => void;
   onClickNucleus?: () => void;
   onEnterNucleus?: () => void;
   onLeaveNucleus?: () => void;
@@ -185,8 +182,6 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
   }
 
   const animatedNucleus = getAnimatedNucleus();
-  const singularNucleus = Object.keys(props.nucleus.particles).filter(k => props.nucleus.particles[k as Color] > 0).length === 1;
-  const singularAnimatedNucleus = animatedNucleus && Object.keys(animatedNucleus.particles).filter(k => animatedNucleus.particles[k as Color] > 0).length === 1;
 
   return (
     <Box w={width} h={width - 50}>
@@ -243,11 +238,11 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
                   style={{ userSelect: "none" }}
                   pointerEvents={`none`}
                   fill={`white`}
-                  fontSize={`300%`}
+                  fontSize={`200%`}
                   key={`nucleus-text-${i}`} 
                   cursor={`pointer`}
-                  x={`${polarToCartesian(radius, radius, singularNucleus ? 0 : nucleusSize/2, getMiddleAngle(key as Color)).x}`} 
-                  y={`${polarToCartesian(radius, radius, singularNucleus ? 0 : nucleusSize/2, getMiddleAngle(key as Color)).y}`}
+                  x={`${polarToCartesian(radius, radius, nucleusSize/1.7, getMiddleAngle(key as Color)).x}`} 
+                  y={`${polarToCartesian(radius, radius, nucleusSize/1.7, getMiddleAngle(key as Color)).y}`}
                   transform={`translate(-12, 12)`}
                 >
                   { props.nucleus.particles[key as Color] > 0 ? props.nucleus.particles[key as Color] : "" }
@@ -314,8 +309,8 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
                   fontSize={`300%`}
                   key={`nucleus-text-${i}A`} 
                   cursor={`pointer`}
-                  x={`${polarToCartesian(radius, radius, singularAnimatedNucleus ? 0 : nucleusSize/2, getMiddleAngle(key as Color, animatedNucleus)).x}`} 
-                  y={`${polarToCartesian(radius, radius, singularAnimatedNucleus ? 0 : nucleusSize/2, getMiddleAngle(key as Color, animatedNucleus)).y}`}
+                  x={`${polarToCartesian(radius, radius, nucleusSize/1.7, getMiddleAngle(key as Color, animatedNucleus)).x}`} 
+                  y={`${polarToCartesian(radius, radius, nucleusSize/1.7, getMiddleAngle(key as Color, animatedNucleus)).y}`}
                   transform={`translate(-12, 12)`}
                 >
                   { animatedNucleus.particles[key as Color] > 0 ? animatedNucleus.particles[key as Color] : "" }
@@ -345,6 +340,25 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
             }
         </svg>
       </Box>
+      {
+        boardMode === "board" && 
+        <Box
+          _hover={{
+            bgColor: `${props.deleting ? theme.colors.blackAlpha[700] : theme.colors.blackAlpha[700]}`
+          }} 
+          cursor={`pointer`}
+          onClick={() => props.onClickButton && props.onClickButton()} 
+          bgColor={`${props.deleting ? theme.colors.blackAlpha[600] : theme.colors.blackAlpha[600]}`}
+          position={`absolute`}
+          transform={`translate(-50%, -50%)`}
+          top={`${radius + padding/2}px`}
+          left={`${radius + padding}px`}
+          borderRadius={100} 
+          width={`${width/10}px`} 
+          height={`${width/10}px`} > 
+            <Text userSelect={`none`} fontSize={`200%`} color={`white`} textAlign={`center`} lineHeight={`${width/10}px`}>{ props.deleting ? "-" : "+" }</Text> 
+        </Box> 
+      }
     </Box>
   );
 }

@@ -10,9 +10,9 @@ import {
   UnHighlightCellAction
 } from "../types/board";
 
-import { COLUMNS, LEVELS } from '../constants';
-import { Particle } from '../types/particle';
 import { Color } from '../helpers/color';
+
+import { COLUMNS, LEVELS } from '../constants';
 
 export const boardSlice = createSlice({
   name: "board",
@@ -56,7 +56,15 @@ export const boardSlice = createSlice({
     },
     deleteCurrent: (board: Board, action: PayloadAction<DeleteCurrentAction>) => {
       const { payload } = action;
-      // board.cells[payload.sector][payload.level].particle = undefined;
+      board.cells = board.cells.map((col, i) => col.map((cell, j) => 
+        payload.card.cells.find(c => c.sector === i && c.level === j) ? { ...cell, particle: undefined } : cell
+      ));
+      board.nucleus.particles = Object.keys(board.nucleus.particles).reduce((o, k) => {
+        return {
+          ...o,
+          [k]: board.nucleus.particles[k as Color] - payload.card.nucleus.particles[k as Color]
+        }
+      }, {} as { [key in Color]: number; });
     }
   }
 });

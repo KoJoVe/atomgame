@@ -4,7 +4,6 @@ import { Box } from "@chakra-ui/react";
 import Deck from "./components/deck";
 import Board from "./components/board";
 import Section from "./components/section";
-import Controls from "./components/controls";
 
 import { Cell } from "./types/cell";
 
@@ -55,7 +54,6 @@ export const App = () => {
   // const onClickNucleusParticle = (color: Color) => particle?.color === color ? dispatch(insertNucleusParticle({ particle: particle })) : '';
 
   const onClickDelete = () => dispatch(toggleDeleting());
-  const onClickRestart = () => dispatch(restartBoard());
 
   const onClickCard = (index: number) => dispatch(selectDeckCard(index));
 
@@ -70,9 +68,11 @@ export const App = () => {
           cells={cells}
           nucleus={nucleus}
           current={current}
+          deleting={deleting}
           onEnterCell={onEnterCell}
           onLeaveCell={onLeaveCell}
-          onClickCell={onClickCell} 
+          onClickCell={onClickCell}
+          onClickButton={onClickDelete} 
           onEnterNucleus={onEnterNucleus}
           onLeaveNucleus={onLeaveNucleus}
           onClickNucleus={onClickNucleus} />
@@ -82,10 +82,6 @@ export const App = () => {
           cards={cards}
           selected={index}
           onClickCard={onClickCard} />
-        <Controls
-          deleting={deleting}
-          onClickDelete={onClickDelete}
-          onClickRestart={onClickRestart} />    
       </Section>
     </Box>
   );

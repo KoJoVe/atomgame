@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from "react";
 import { Box, Button } from "@chakra-ui/react";
-import { DeleteIcon, AddIcon, MinusIcon, CheckIcon } from "@chakra-ui/icons";
+import { DeleteIcon, AddIcon, MinusIcon } from "@chakra-ui/icons";
 
 export interface ControlsProps {
   deleting?: boolean;
@@ -18,13 +18,6 @@ export const Controls: FunctionComponent<ControlsProps> = (props) => {
         leftIcon={ props.deleting ? <MinusIcon /> : <AddIcon /> } 
         variant={"outline"}>
         { props.deleting ? "Extracting" : "Fusing" }
-      </Button>
-      <Button 
-        ml={`10px`}
-        mr={`10px`}
-        leftIcon={ <CheckIcon /> } 
-        variant={"outline"}>
-        Apply
       </Button>
       <Button 
         ml={`10px`}
