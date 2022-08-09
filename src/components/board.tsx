@@ -37,12 +37,13 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
   
   const boardMode = props.mode || "board";
   const width = props.w || 0;  
-  const padding = boardMode === "card" ? 10 : 40;
+  const padding = boardMode === "card" ? 10 : 10;
+  const textOffset = 8;
   const border = boardMode === "card" ? 1 : 2;
   const wideBorder = 3;
   const dashArray = "5,5";
   const nucleusSize = width * (boardMode === "card" ? 0.15 : 0.15);
-  const iconScale = 0.05;
+  const iconScale = 0.03;
 
   const radius = width/2 - (padding);
   const time = 0; //useAnimationFrame(); (Create a separate boardNucleus component that uses requestAnimationFrame and one that does not)
@@ -58,8 +59,9 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
 
   const getBoardStyle = () => {
     return {
+      position: `relative` as any,
       left: `${padding}px`,
-      top: `${boardMode === "card" ? padding : padding/2}px`,
+      top: `${padding}px`,
     }
   }
   
@@ -184,9 +186,10 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
   const animatedNucleus = getAnimatedNucleus();
 
   return (
-    <Box w={width} h={width - 50}>
-      <Box position={`relative`} style={getBoardStyle()}>
+    <Box w={width} h={width - 25} margin={`auto`}>
+      <Box>
         <svg viewBox={`0 0 ${Math.abs(radius * 2)} ${Math.abs(radius * 2)}`} 
+          style={getBoardStyle()}
           width={Math.abs(radius * 2)} 
           height={Math.abs(radius * 2)} >
             {
@@ -205,6 +208,26 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
                   style={({ cursor: "pointer" })} >
                 </path>
               }))
+            }
+            {
+              getBoardCells().map((column, i) => column.map((cell, j) => {
+                return boardMode === "board" && cell.icon &&
+                  <g key={`overlay-${i}-${j}`} 
+                    fill="white" 
+                    transform={` 
+                      translate(
+                        ${(polarToCartesian(radius, radius, cell.radius, cell.rotation).x) - (512/2 * iconScale)} 
+                        ${(polarToCartesian(radius, radius, cell.radius, cell.rotation).y) - (512/2 * iconScale)}
+                      ) scale(${iconScale})`}>
+                    <path
+                      d={"m256,21c-129.7869,0-235,105.2131-235,235s105.2131,235 235,235 235-105.2131 235-235-105.2131-235-235-235zm0,34.9562c110.5145,0 200.0437,89.5292 200.0437,200.0438s-89.5292,200.0438-200.0437,200.0438-200.1906-89.5292-200.1906-200.0438 89.6761-200.0438 200.1906-200.0438zm0,23.2063c-17.4369,0-31.5781,14.1412-31.5781,31.5781s14.1412,31.5781 31.5781,31.5781 31.5782-14.1412 31.5782-31.5781-14.1413-31.5781-31.5782-31.5781zm-73.5844,19.5344c-5.0904.1321-10.1153,1.5349-14.8343,4.2594-15.1009,8.7184-20.3217,28.0805-11.6031,43.1812s27.9335,20.0279 43.0343,11.3094 20.3216-27.7867 11.6031-42.8875c-5.994-10.3818-17.0011-16.1527-28.2-15.8625zm147.1688,0c-11.1989-.29-22.2061,5.4807-28.2,15.8625-8.7185,15.1008-3.6445,34.3159 11.4562,43.0344s34.4628,3.6446 43.1813-11.4563 3.4977-34.4628-11.6032-43.1812c-4.719-2.7245-9.744-4.1275-14.8343-4.2594zm-198.575,53.1688c-11.1989-.29-22.2061,5.4807-28.2,15.8625-8.7184,15.1008-3.4977,34.3159 11.6031,43.0344s34.169,3.4977 42.8875-11.6031 3.7914-34.316-11.3093-43.0344c-4.719-2.7245-9.8909-4.1275-14.9813-4.2594zm249.9812,0c-5.0904.1321-10.2623,1.5349-14.9812,4.2594-15.1008,8.7184-20.1747,28.0805-11.4563,43.1812s27.9336,20.1747 43.0344,11.4563 20.3215-27.9336 11.6032-43.0344c-5.994-10.3818-17.0012-16.1527-28.2001-15.8625zm-124.9906,14.3938c-49.5575,0-89.7406,40.1831-89.7406,89.7406s40.1831,89.7406 89.7406,89.7406 89.7407-40.1831 89.7407-89.7406-40.1831-89.7406-89.7407-89.7406zm-145.4063,58.3094c-17.4369,0-31.4312,14.1412-31.4312,31.5781s13.9943,31.5782 31.4312,31.5781 31.4313-14.1412 31.4313-31.5781-13.9944-31.5781-31.4313-31.5781zm290.8125,0c-17.4369,0-31.5781,14.1413-31.5781,31.5781s14.1413,31.5781 31.5781,31.5781 31.4313-14.1412 31.4313-31.5781-13.9944-31.5782-31.4313-31.5781zm-272.1593,72.7031c-5.0733.1222-10.1154,1.5349-14.8344,4.2594-15.1008,8.7185-20.3216,27.9336-11.6031,43.0344s28.0804,20.3216 43.1813,11.6031 20.0277-27.9336 11.3093-43.0344c-5.9939-10.3818-16.8918-16.131-28.0531-15.8625zm250.4219,0c-10.1124.7151-19.6667,6.2776-25.1157,15.7156-8.7184,15.1008-3.6445,34.4628 11.4563,43.1812s34.4628,3.4977 43.1813-11.6031 3.4977-34.316-11.6032-43.0344c-5.6629-3.2694-11.8514-4.6884-17.9187-4.2594zm-198.575,53.1687c-10.0909.6782-19.6666,6.1308-25.1156,15.5688-8.7185,15.1008-3.4978,34.4628 11.6031,43.1813s34.3159,3.4977 43.0343-11.6032 3.4977-34.169-11.6031-42.8875c-5.6628-3.2694-11.8643-4.6661-17.9187-4.2594zm146.7281,0c-5.0904.1319-10.2623,1.5349-14.9813,4.2594-15.1008,8.7184-20.1747,27.9335-11.4562,43.0343s27.9336,20.3216 43.0343,11.6032 20.3217-28.0805 11.6032-43.1813c-5.994-10.3819-17.0011-16.0058-28.2-15.7157zm-71.8219,19.3875c-17.4369,0-31.5781,13.9943-31.5781,31.4312s14.1412,31.5782 31.5781,31.5782 31.5782-14.1412 31.5782-31.5782-14.1413-31.4312-31.5782-31.4312z"}
+                      onClick={() => props.onClickCell && props.onClickCell(cell)}
+                      onMouseEnter={() => props.onEnterCell && props.onEnterCell(cell) } 
+                      onMouseLeave={() => props.onLeaveCell && props.onLeaveCell(cell) } >
+                    </path>
+                  </g>
+                }
+              ))
             }
             <path
               d={getNucleusDString(props.nucleus)}
@@ -238,12 +261,12 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
                   style={{ userSelect: "none" }}
                   pointerEvents={`none`}
                   fill={`white`}
-                  fontSize={`200%`}
+                  fontSize={`1.5em`}
                   key={`nucleus-text-${i}`} 
                   cursor={`pointer`}
-                  x={`${polarToCartesian(radius, radius, nucleusSize/1.7, getMiddleAngle(key as Color)).x}`} 
-                  y={`${polarToCartesian(radius, radius, nucleusSize/1.7, getMiddleAngle(key as Color)).y}`}
-                  transform={`translate(-12, 12)`}
+                  x={`${polarToCartesian(radius, radius, nucleusSize/1.5, getMiddleAngle(key as Color)).x}`} 
+                  y={`${polarToCartesian(radius, radius, nucleusSize/1.5, getMiddleAngle(key as Color)).y + textOffset}`}
+                  textAnchor={`middle`}
                 >
                   { props.nucleus.particles[key as Color] > 0 ? props.nucleus.particles[key as Color] : "" }
                 </text>
@@ -251,7 +274,7 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
             }
             {
               getBoardCells().map((column, i) => column.map((cell, j) => {
-                const animatedCell = (props.current && props.current.cells.find(c => c.sector === i && c.level === j));
+                const animatedCell = (props.current && props.current.cells.find(c => c.sector === i && c.level === j)) as any;
                 return animatedCell ? <path
                   key={`cellA-${i}-${j}`} 
                   d={cell.d}
@@ -306,37 +329,17 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
                   style={{ userSelect: "none" }}
                   pointerEvents={`none`}
                   fill={`white`}
-                  fontSize={`300%`}
+                  fontSize={`1.5em`}
                   key={`nucleus-text-${i}A`} 
                   cursor={`pointer`}
-                  x={`${polarToCartesian(radius, radius, nucleusSize/1.7, getMiddleAngle(key as Color, animatedNucleus)).x}`} 
-                  y={`${polarToCartesian(radius, radius, nucleusSize/1.7, getMiddleAngle(key as Color, animatedNucleus)).y}`}
-                  transform={`translate(-12, 12)`}
+                  x={`${polarToCartesian(radius, radius, nucleusSize/1.5, getMiddleAngle(key as Color, animatedNucleus)).x}`} 
+                  y={`${polarToCartesian(radius, radius, nucleusSize/1.5, getMiddleAngle(key as Color, animatedNucleus)).y + textOffset}`}
+                  textAnchor={`middle`}
                 >
                   { animatedNucleus.particles[key as Color] > 0 ? animatedNucleus.particles[key as Color] : "" }
                   <animate dur="1.5s" attributeName="fill-opacity" values={`${0};${1};${1};${0};`} repeatCount="indefinite"/>
                 </text>
               })
-            }
-            {
-              getBoardCells().map((column, i) => column.map((cell, j) => {
-                return boardMode === "board" &&
-                  <g key={`overlay-${i}-${j}`} 
-                    fill="white" 
-                    transform={` 
-                      translate(
-                        ${(polarToCartesian(radius, radius, cell.radius, cell.rotation).x) - (512/2 * iconScale)} 
-                        ${(polarToCartesian(radius, radius, cell.radius, cell.rotation).y) - (512/2 * iconScale)}
-                      ) scale(${iconScale})`}>
-                    <path
-                      d={"m256,21c-129.7869,0-235,105.2131-235,235s105.2131,235 235,235 235-105.2131 235-235-105.2131-235-235-235zm0,34.9562c110.5145,0 200.0437,89.5292 200.0437,200.0438s-89.5292,200.0438-200.0437,200.0438-200.1906-89.5292-200.1906-200.0438 89.6761-200.0438 200.1906-200.0438zm0,23.2063c-17.4369,0-31.5781,14.1412-31.5781,31.5781s14.1412,31.5781 31.5781,31.5781 31.5782-14.1412 31.5782-31.5781-14.1413-31.5781-31.5782-31.5781zm-73.5844,19.5344c-5.0904.1321-10.1153,1.5349-14.8343,4.2594-15.1009,8.7184-20.3217,28.0805-11.6031,43.1812s27.9335,20.0279 43.0343,11.3094 20.3216-27.7867 11.6031-42.8875c-5.994-10.3818-17.0011-16.1527-28.2-15.8625zm147.1688,0c-11.1989-.29-22.2061,5.4807-28.2,15.8625-8.7185,15.1008-3.6445,34.3159 11.4562,43.0344s34.4628,3.6446 43.1813-11.4563 3.4977-34.4628-11.6032-43.1812c-4.719-2.7245-9.744-4.1275-14.8343-4.2594zm-198.575,53.1688c-11.1989-.29-22.2061,5.4807-28.2,15.8625-8.7184,15.1008-3.4977,34.3159 11.6031,43.0344s34.169,3.4977 42.8875-11.6031 3.7914-34.316-11.3093-43.0344c-4.719-2.7245-9.8909-4.1275-14.9813-4.2594zm249.9812,0c-5.0904.1321-10.2623,1.5349-14.9812,4.2594-15.1008,8.7184-20.1747,28.0805-11.4563,43.1812s27.9336,20.1747 43.0344,11.4563 20.3215-27.9336 11.6032-43.0344c-5.994-10.3818-17.0012-16.1527-28.2001-15.8625zm-124.9906,14.3938c-49.5575,0-89.7406,40.1831-89.7406,89.7406s40.1831,89.7406 89.7406,89.7406 89.7407-40.1831 89.7407-89.7406-40.1831-89.7406-89.7407-89.7406zm-145.4063,58.3094c-17.4369,0-31.4312,14.1412-31.4312,31.5781s13.9943,31.5782 31.4312,31.5781 31.4313-14.1412 31.4313-31.5781-13.9944-31.5781-31.4313-31.5781zm290.8125,0c-17.4369,0-31.5781,14.1413-31.5781,31.5781s14.1413,31.5781 31.5781,31.5781 31.4313-14.1412 31.4313-31.5781-13.9944-31.5782-31.4313-31.5781zm-272.1593,72.7031c-5.0733.1222-10.1154,1.5349-14.8344,4.2594-15.1008,8.7185-20.3216,27.9336-11.6031,43.0344s28.0804,20.3216 43.1813,11.6031 20.0277-27.9336 11.3093-43.0344c-5.9939-10.3818-16.8918-16.131-28.0531-15.8625zm250.4219,0c-10.1124.7151-19.6667,6.2776-25.1157,15.7156-8.7184,15.1008-3.6445,34.4628 11.4563,43.1812s34.4628,3.4977 43.1813-11.6031 3.4977-34.316-11.6032-43.0344c-5.6629-3.2694-11.8514-4.6884-17.9187-4.2594zm-198.575,53.1687c-10.0909.6782-19.6666,6.1308-25.1156,15.5688-8.7185,15.1008-3.4978,34.4628 11.6031,43.1813s34.3159,3.4977 43.0343-11.6032 3.4977-34.169-11.6031-42.8875c-5.6628-3.2694-11.8643-4.6661-17.9187-4.2594zm146.7281,0c-5.0904.1319-10.2623,1.5349-14.9813,4.2594-15.1008,8.7184-20.1747,27.9335-11.4562,43.0343s27.9336,20.3216 43.0343,11.6032 20.3217-28.0805 11.6032-43.1813c-5.994-10.3819-17.0011-16.0058-28.2-15.7157zm-71.8219,19.3875c-17.4369,0-31.5781,13.9943-31.5781,31.4312s14.1412,31.5782 31.5781,31.5782 31.5782-14.1412 31.5782-31.5782-14.1413-31.4312-31.5782-31.4312z"}
-                      onClick={() => props.onClickCell && props.onClickCell(cell)}
-                      onMouseEnter={() => props.onEnterCell && props.onEnterCell(cell) } 
-                      onMouseLeave={() => props.onLeaveCell && props.onLeaveCell(cell) } >
-                    </path>
-                  </g>
-                }
-              ))
             }
         </svg>
       </Box>
@@ -344,19 +347,19 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
         boardMode === "board" && 
         <Box
           _hover={{
-            bgColor: `${props.deleting ? theme.colors.blackAlpha[700] : theme.colors.blackAlpha[700]}`
+            bgColor: `${props.deleting ? theme.colors.blackAlpha[500] : theme.colors.blackAlpha[700]}`
           }} 
           cursor={`pointer`}
           onClick={() => props.onClickButton && props.onClickButton()} 
-          bgColor={`${props.deleting ? theme.colors.blackAlpha[600] : theme.colors.blackAlpha[600]}`}
+          bgColor={`${props.deleting ? theme.colors.blackAlpha[400] : theme.colors.blackAlpha[600]}`}
           position={`absolute`}
           transform={`translate(-50%, -50%)`}
-          top={`${radius + padding/2}px`}
+          top={`${radius + padding}px`}
           left={`${radius + padding}px`}
           borderRadius={100} 
-          width={`${width/10}px`} 
-          height={`${width/10}px`} > 
-            <Text userSelect={`none`} fontSize={`200%`} color={`white`} textAlign={`center`} lineHeight={`${width/10}px`}>{ props.deleting ? "-" : "+" }</Text> 
+          width={`${width/8}px`} 
+          height={`${width/8}px`} > 
+            <Text userSelect={`none`} fontSize={`1.8em`} color={`white`} textAlign={`center`} lineHeight={`${width/8 - 3}px`}>{ props.deleting ? "-" : "+" }</Text> 
         </Box> 
       }
     </Box>
