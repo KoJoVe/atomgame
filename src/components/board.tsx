@@ -356,10 +356,13 @@ export const Board: FunctionComponent<BoardProps> = (props) => {
           transform={`translate(-50%, -50%)`}
           top={`${radius + padding}px`}
           left={`${radius + padding}px`}
-          borderRadius={100} 
+          borderRadius={100}
+          borderWidth={`1px`}
+          borderColor={`white`}
+          borderStyle={`solid`} 
           width={`${width/8}px`} 
           height={`${width/8}px`} > 
-            <Text userSelect={`none`} fontSize={`1.8em`} color={`white`} textAlign={`center`} lineHeight={`${width/8 - 3}px`}>{ props.deleting ? "-" : "+" }</Text> 
+            <Text userSelect={`none`} fontSize={`1.8em`} color={`white`} textAlign={`center`} lineHeight={`${width/8 - 5}px`}>{ props.deleting ? "-" : "+" }</Text> 
         </Box> 
       }
     </Box>
