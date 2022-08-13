@@ -3,12 +3,8 @@ import { Card } from "./card";
 import { Cell } from "./cell";
 import { Nucleus } from "./nucleus";
 
-export interface DeleteCurrentAction {
-  card: Card;
-}
-
-export interface ApplyCurrentAction {
-  card: Card;
+export interface UpdateBoardAction {
+  board: Board;
 }
 
 export interface HighlightCellAction {

@@ -1,4 +1,3 @@
-import { Icons } from "../helpers/icons";
 import { Particle } from "./particle";
 
 export type Cell = {
@@ -7,4 +6,6 @@ export type Cell = {
   particle?: Particle;
   highlighted?: boolean;
   _valid?: boolean;
+  _icon?: string;
+  _new?: boolean;
 }

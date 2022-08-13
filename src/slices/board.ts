@@ -4,13 +4,10 @@ import { generateBoard } from '../generators/board';
 
 import { 
   Board,
-  ApplyCurrentAction,
-  DeleteCurrentAction,
+  UpdateBoardAction,
   HighlightCellAction,
   UnHighlightCellAction
 } from "../types/board";
-
-import { Color } from '../helpers/color';
 
 import { COLUMNS, LEVELS } from '../constants';
 
@@ -42,29 +39,10 @@ export const boardSlice = createSlice({
         board.nucleus.highlighted = undefined;
       }
     },
-    applyCurrent: (board: Board, action: PayloadAction<ApplyCurrentAction>) => {
+    updateBoard: (board: Board, action: PayloadAction<UpdateBoardAction>) => {
       const { payload } = action;
-      board.cells = board.cells.map((col, i) => col.map((cell, j) => 
-        payload.card.cells.find(c => c.sector === i && c.level === j) ? payload.card.cells.find(c => c.sector === i && c.level === j)! : cell
-      ));
-      board.nucleus.particles = Object.keys(board.nucleus.particles).reduce((o, k) => {
-        return {
-          ...o,
-          [k]: board.nucleus.particles[k as Color] + payload.card.nucleus.particles[k as Color]
-        }
-      }, {} as { [key in Color]: number; });
-    },
-    deleteCurrent: (board: Board, action: PayloadAction<DeleteCurrentAction>) => {
-      const { payload } = action;
-      board.cells = board.cells.map((col, i) => col.map((cell, j) => 
-        payload.card.cells.find(c => c.sector === i && c.level === j) ? { ...cell, particle: undefined } : cell
-      ));
-      board.nucleus.particles = Object.keys(board.nucleus.particles).reduce((o, k) => {
-        return {
-          ...o,
-          [k]: board.nucleus.particles[k as Color] - payload.card.nucleus.particles[k as Color]
-        }
-      }, {} as { [key in Color]: number; });
+      board.cells = payload.board.cells.map(col => col.map(cell => ({ ...cell, _new: undefined })));
+      board.nucleus = payload.board.nucleus;
     }
   }
 });
@@ -73,7 +51,6 @@ export const {
   restartBoard,
   highlightCell,
   unHighlightCell,
-  applyCurrent,
-  deleteCurrent,
+  updateBoard,
 } = boardSlice.actions;
 export const boardReducer = boardSlice.reducer;
